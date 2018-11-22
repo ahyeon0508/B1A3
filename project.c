@@ -4,27 +4,6 @@
 #include <windows.h>
 #include <time.h> 
 
-#define PRINT_INT(x) printf("\n"#x" : %d\n", x);
-#define PRINT_CHAR(x) printf("\n"#x" : %c\n", x);
-#define PRINT_STRING(x) printf("\n"#x" : %s\n", x);
-
-/////////////////////////////////출력 관련 매크로
-
-#define SCAN_INT(x) scanf("%d", &x);
-#define SCAN_CHAR(x) scanf("%c", &x);
-#define SCAN_STRING(x) scanf("%s", x);
-
-/////////////////////////////////입력 관련 매크로
-
-#define PATH_CLIENT "client.txt"
-#define PATH_BOOK "book.txt"
-#define PATH_BORROW "borrow.txt"
-
-#define READ_MOD "rt"
-#define WRITE_MOD "wt"
-
-/////////////////////////////////파일 관련 매크로
-
 #define MALLOC_CHAR(x, y) (x) -> y = (char *) malloc(strlen(y) * sizeof(char))
 #define REALLOC_CHAR(x, y) (x) -> y = (char *) realloc((x) -> y, strlen(y) * sizeof(char))
 #define MALLOC_STRUCT(x,y) y = (x *) malloc(sizeof(x))
@@ -133,7 +112,7 @@ unsigned checknum_book(BOOK *head, int num);
 // book 파일에 매개인자로 받은 도서번호와 같은 도서번호가 없으면 -1을 리턴
 // 있으면 head에서 몇번 움직여야 나오는지 리턴하는 함수
 
-int max_booknumber(BOOK *head);
+int max_book_number(BOOK *head);
 // 도서번호 최대가 몇인지 리턴해주는 함수
 // 도서 삽입할 때 여기서 +1한거 넣어줘야 함
 
@@ -178,7 +157,7 @@ int main(void) {
 	BOOK *book_head = book_read();
 	BORROW *borrow_head;
 
-	// main_menu(client_head, book_head, borrow_head);	
+	main_menu(client_head, book_head, borrow_head);	
 
 	return 0;
 }
@@ -186,7 +165,7 @@ int main(void) {
 CLIENT *client_read(void) { //함수 안에서 client 파일 내용 받아와서 CLIENT 구조체에 내용 넣는 함수 (만드는 중)
 	FILE *client_ifp; //client 파일 내용 받아오는 포인터 변수
 
-	if ((client_ifp = fopen(PATH_CLIENT, READ_MOD)) == NULL) { //client 파일 읽어오기
+	if ((client_ifp = fopen("client.txt", "r")) == NULL) { //client 파일 읽어오기
 	  printf("client.txt 파일이 존재하지 않습니다.\n"); //파일 없으면 오류 메시지 출력
 	  exit(1); //프로그램 종료
 	}
@@ -313,7 +292,7 @@ void print_one_client(CLIENT *head, int location){
 }	
 
 void save_client(CLIENT *head){
-	FILE *client_ofp = fopen(PATH_CLIENT, WRITE_MOD);
+	FILE *client_ofp = fopen("client.txt", "w");
 	while(head){
 		fprintf(client_ofp, "%s | %s | %s | %s| %s\n", head -> id, head -> password, head -> name,
 		head -> address, head -> phone_number);
@@ -332,27 +311,25 @@ void signup_client(CLIENT *head){
 	printf("\n>> 회원 가입 <<\n");
 	printf("학번, 비밀번호, 이름, 주소, 전화번호를 입력하세요.\n\n");
 	printf("학번 : ");
-	SCAN_STRING(id); //학번 입력받기
+	scanf("%s", id); //학번 입력받기
 	
 	while (checkid_client(head, id) != -1){ //학번 중복 체크 하는 부분
 		printf("이미 있는 학번입니다. 다시 입력해주세요.\n");
 		printf("학번 : ");
-		SCAN_STRING(id);
+		scanf("%s", id);
 	}
 	
 	printf("비밀번호 : ");
-	SCAN_STRING(password); //비밀번호 입력받기
+	scanf("%s", password); //비밀번호 입력받기
 	printf("이름 : ");
-	SCAN_STRING(name); //이름 입력받기
+	scanf("%s", name); //이름 입력받기
 	CLEAR_BUFFER; //버퍼 초기화
 	printf("주소 : "); 
 	gets(address); //주소 입력받기
 	printf("전화번호 : "); 
-	SCAN_STRING(phone_number); //전화번호 입력받기
+	scanf("%s", phone_number); //전화번호 입력받기
 	
 	add_client(create_client(id, password, name, address, phone_number), &head);
-	head = sort_client(head);
-	save_client(head);
 }
 
 int checkname_client(CLIENT *head, char name[]){
@@ -405,18 +382,18 @@ void login_client(CLIENT *head){
 	
 	printf("\n>> 로그인 <<\n");
 	printf("학번 : ");
-	SCAN_STRING(id);
+	scanf("%s", id);
 	printf("비밀번호 : ");
-	SCAN_STRING(password);
+	scanf("%s", password);
 	
 	while ((res = checkid_client(head, id)) != checkpw_client(head, password)
 			|| res == -1){
 		printf("아이디 혹은 비밀번호가 틀렸습니다.\n");
 		printf("다시 입력해주세요.\n\n");
 		printf("학번 : ");
-		SCAN_STRING(id);
+		scanf("%s", id);
 		printf("비밀번호 : ");
-		SCAN_STRING(password);
+		scanf("%s", password);
 	}
 	
 	printf("\n>> 로그인 되었습니다. <<\n");
@@ -450,8 +427,7 @@ void remove_client(CLIENT **head_p){
 			temp = temp -> next;
 		
 		for (int i = 0; i < my_account + 1; i++)
-			after = after -> next;
-		
+			after = after -> next;		
 
 		free(temp -> id);
 		free(temp -> password);
@@ -478,16 +454,16 @@ void edit_client(CLIENT *head){
 	print_one_client(head, my_account);
 	printf("\n수정할 정보를 입력해주세요\n");
 	printf("비밀번호 : ");	
-	SCAN_STRING(password);
+	scanf("%s", password);
 	CLEAR_BUFFER;
 	printf("주소 : ");
 	gets(address);
 	printf("전화번호 : ");
-	SCAN_STRING(phone_number);
+	scanf("%s", phone_number);
 
 
-	address[strlen(address)] = ' '; //주소 마지막칸 띄어쓰기 해주기
-	address[strlen(address) + 1] = '\0'; //널문자 넣어주기
+	// address[strlen(address)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+	// address[strlen(address) + 1] = '\0'; //널문자 넣어주기
 
 	for (int i = 0; i < my_account; i++)
 		head = head -> next;
@@ -510,7 +486,7 @@ void edit_client(CLIENT *head){
 BOOK *book_read(void) { //함수 안에서 book 파일 내용 받아와서 BOOK 구조체에 내용 넣는 함수
 	FILE *book_ifp; //book 파일 내용 받아오는 포인터 변수
 
-	if ((book_ifp = fopen("book.txt", READ_MOD)) == NULL) { //book 파일 읽어오기
+	if ((book_ifp = fopen("book.txt", "r")) == NULL) { //book 파일 읽어오기
 		printf("book.txt 파일이 존재하지 않습니다.\n"); //파일 없으면 오류 메시지 출력
 		exit(1); //프로그램 종료
 	}
@@ -607,17 +583,6 @@ void insert_book(BOOK *head){
 	printf("소장처 : ");
 	gets(location);
 
-	// name[strlen(name)] = ' '; //주소 마지막칸 띄어쓰기 해주기
-	// name[strlen(name) + 1] = '\0'; //널문자 넣어주기
-	// publisher[strlen(publisher)] = ' '; //주소 마지막칸 띄어쓰기 해주기
-	// publisher[strlen(publisher) + 1] = '\0'; //널문자 넣어주기
-	// writer[strlen(writer)] = ' '; //주소 마지막칸 띄어쓰기 해주기
-	// writer[strlen(writer) + 1] = '\0'; //널문자 넣어주기
-	// location[strlen(location)] = ' '; //주소 마지막칸 띄어쓰기 해주기
-	// location[strlen(location) + 1] = '\0'; //널문자 넣어주기
-
-	// printf("%s %s %s %s %s\n", name, publisher, writer, ISBN, location);
-
 	printf("\n자동입력 사항\n");
 	printf("대여가능 여부 : %c\n", borrow);
 	printf("도서번호 : %u\n", number);
@@ -625,14 +590,8 @@ void insert_book(BOOK *head){
 	printf("등록하려면 Y를 입력해주세요 : ");
 
 	buf = getchar();
-	if (buf == 'Y' || buf == 'y'){
+	if (buf == 'Y' || buf == 'y')
 		add_book(create_book(number, name, publisher, writer, ISBN, location, borrow), &head);
-		head = sort_book(head);
-		save_book(head);
-	}
-
-	
-
 }
 
 BOOK *sort_book(BOOK *head){
@@ -676,7 +635,7 @@ BOOK *sort_book(BOOK *head){
 }
 
 void save_book(BOOK *head){
-	FILE *book_ofp = fopen(PATH_BOOK, WRITE_MOD);
+	FILE *book_ofp = fopen("book.txt", "w");
 	while(head){
 		fprintf(book_ofp, "%07u | %s| %s| %s| %s | %s| %c\n", head -> number, head -> name,
 		head -> publisher, head -> writer, head -> ISBN, head -> location, head -> borrow);
@@ -900,6 +859,7 @@ void main_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ // �
 		switch(num){
 			case 1:
 				signup_client(client_head);
+				client_head = sort_client(client_head);
 				save_client(client_head);
 				//회원가입
 				break;
@@ -983,7 +943,10 @@ void admin_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
 		scanf("%d", &num);
 		CLEAR_BUFFER;
 		switch(num){
-			case 1:				
+			case 1:			
+				insert_book(book_head);
+				book_head = sort_book(book_head);
+				save_book(book_head);	
 				//도서 등록
 				break;
 			case 2:
@@ -1034,7 +997,7 @@ void search_menu(CLIENT *client_head){
 		switch(num){
 			case 1:		
 				printf("검색할 이름 : ");
-				SCAN_STRING(name);
+				scanf("%s", name);
 				if ((location = checkname_client(client_head, name)) == -1)
 					printf("없는 이름입니다.\n");
 				else
@@ -1043,7 +1006,7 @@ void search_menu(CLIENT *client_head){
 				break;
 			case 2:
 				printf("검색할 학번 : ");
-				SCAN_STRING(id);
+				scanf("%s", id);
 				if ((location = checkid_client(client_head, id)) == -1)
 					printf("없는 학번입니다.\n");
 				else
