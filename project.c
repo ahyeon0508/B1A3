@@ -127,9 +127,9 @@ void save_book(BOOK *head);
 
 void remove_book(BOOK **head_p, int location);
 
-unsigned book_number_check(BOOK *head);
+int book_number_check(BOOK *head);
 
-int checknum_book(BOOK *head, int num);
+unsigned checknum_book(BOOK *head, int num);
 // book 파일에 매개인자로 받은 도서번호와 같은 도서번호가 없으면 -1을 리턴
 // 있으면 head에서 몇번 움직여야 나오는지 리턴하는 함수
 
@@ -582,15 +582,55 @@ void add_book(BOOK *new_book, BOOK **head_p){
 }
 
 void insert_book(BOOK *head){
-	unsigned number; //도서번호 (정수 7자리)
-	char *name; //도서명
-	char *publisher; //출판사
-	char *writer; //저자명
-	char *ISBN; //ISBN(정수 13자리)
-	char *location; //소장처
-	char borrow; //대여가능 여부
+		unsigned number;
+	char name[70]; //도서명
+	char publisher[40]; //출판사
+	char ISBN[20]; //ISBN(정수 13자리)
+	char writer[40]; //저자명
+	char location[40]; //소장처
+	char borrow;
+	char buf;
 
-	number = max_book_number(head) + 1;
+	number = max_book_number(head) + 1;	//자동 입력 사항
+	borrow = 'Y';
+
+	printf("\n>> 도서 등록 <<\n");
+	printf("도서명 : ");
+	gets(name);
+	printf("출판사 : ");
+	gets(publisher);
+	printf("저자명 : ");
+	gets(writer);
+	printf("ISBN : ");
+	scanf("%s", ISBN);
+	CLEAR_BUFFER;
+	printf("소장처 : ");
+	gets(location);
+
+	// name[strlen(name)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+	// name[strlen(name) + 1] = '\0'; //널문자 넣어주기
+	// publisher[strlen(publisher)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+	// publisher[strlen(publisher) + 1] = '\0'; //널문자 넣어주기
+	// writer[strlen(writer)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+	// writer[strlen(writer) + 1] = '\0'; //널문자 넣어주기
+	// location[strlen(location)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+	// location[strlen(location) + 1] = '\0'; //널문자 넣어주기
+
+	// printf("%s %s %s %s %s\n", name, publisher, writer, ISBN, location);
+
+	printf("\n자동입력 사항\n");
+	printf("대여가능 여부 : %c\n", borrow);
+	printf("도서번호 : %u\n", number);
+
+	printf("등록하려면 Y를 입력해주세요 : ");
+
+	buf = getchar();
+	if (buf == 'Y' || buf == 'y'){
+		add_book(create_book(number, name, publisher, writer, ISBN, location, borrow), &head);
+		head = sort_book(head);
+		save_book(head);
+	}
+
 	
 
 }
@@ -680,7 +720,7 @@ void remove_book(BOOK **head_p, int position){
 	}
 }
 
-unsigned book_number_check(BOOK *head){
+int book_number_check(BOOK *head){
 	int res = 0;
 	char ISBN[20];
 
@@ -696,7 +736,7 @@ unsigned book_number_check(BOOK *head){
 	return res;
 }
 
-int checknum_book(BOOK *head, int number){
+unsigned checknum_book(BOOK *head, int number){
 	int res = -1;
 	int cnt = 0;
 
