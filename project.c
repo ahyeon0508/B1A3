@@ -109,6 +109,8 @@ void remove_book(BOOK **head_p, int location);
 
 int book_number_check(BOOK *head);
 
+int count_book(BOOK *book_head, char *factor);
+
 unsigned checknum_book(BOOK *head, int num);
 // book 파일에 매개인자로 받은 도서번호와 같은 도서번호가 없으면 -1을 리턴
 // 있으면 head에서 몇번 움직여야 나오는지 리턴하는 함수
@@ -189,8 +191,13 @@ int main(void) {
    BOOK *book_head = book_read();
    BORROW *borrow_head = borrow_read();
 
-   admin_bookborrow(book_head, client_head, borrow_head);
-   my_borrow_list(book_head, borrow_head);
+   // admin_bookborrow(book_head, client_head, borrow_head);
+   // my_borrow_list(book_head, borrow_head); //방금 대여한 책이 txt에 입력이 되는데 연결리스트로 안들어감
+
+   bookname_search(book_head);
+   ISBN_search(book_head);
+   publisher_search(book_head);
+   writer_search(book_head);
 
    return 0;
 }
@@ -1078,27 +1085,39 @@ void admin_bookreturn(BOOK *book_head, BORROW *borrow_head, int return_book_numb
   fclose(book_ifp);
   fclose(borrow_ifp);
 }
+int count_book(BOOK *book_head, char *factor){
+  BOOK *book_temp = book_head;
+
+  int cnt = 0;
+  while(book_temp){
+    if(!strcmp(factor, book_temp -> name) && book_temp -> borrow == 'Y')
+      cnt++;
+    book_temp = book_temp -> next;
+  }
+  return cnt;
+}
 
 void bookname_search(BOOK *head){
    BOOK *temp = head;
 
    char bookname[70];
-   int number, i;
+   int number, i, cnt;
 
    printf("\n검색할 도서 이름 : ");
    gets(bookname);
    while(temp){
       if (strstr(temp -> name, bookname)){
          number = book_number_check(temp);
+         cnt = count_book(head, temp -> name);
 
          printf("\n도서명: %s\n", temp -> name);
          printf("출판사: %s\n", temp -> publisher);
          printf("저자명: %s\n", temp -> writer);
          printf("ISBN: %s\n", temp -> ISBN);
          printf("소장처: %s\n", temp -> location);
-         printf("대여가능 여부: %c\n", temp -> borrow); //TODO (n/2)는 borrow기능 만들고 해야함
+         printf("대여가능 여부: %c(%d/%d)\n", temp -> borrow, cnt, number);
          printf("** Y는 대여가능, N은 대여불가를 의미\n");
-         printf("** (x/y) : (대여된 총 권수 / %d)\n", number);
+         printf("** (x/y) : (대여된 총 권수 / 보유하고 있는 총 권수)\n");
 
          for (i = 0; i < number - 1; i++)
             temp = temp -> next;
@@ -1112,21 +1131,24 @@ void publisher_search(BOOK *head){
    BOOK *temp = head;
 
    char publishername[70];
-   int number, i;
+   int number, i, cnt;
 
    printf("\n출판사를 입력하세요 : ");
    gets(publishername);
    while (temp){
       if (strstr(temp -> publisher, publishername)){
          number = book_number_check(temp);
+         cnt = count_book(head, temp -> name);
+
          printf("\n도서명: %s\n", temp -> name);
          printf("출판사: %s\n", temp -> publisher);
          printf("저자명: %s\n", temp -> writer);
          printf("ISBN: %s\n", temp -> ISBN);
          printf("소장처: %s\n", temp -> location);
-         printf("대여가능 여부: %c\n", temp -> borrow); //TODO (n/2)는 borrow기능 만들고 해야함
+         printf("대여가능 여부: %c(%d/%d)\n", temp -> borrow, cnt, number);
          printf("** Y는 대여가능, N은 대여불가를 의미\n");
-         printf("** (x/y) : (대여된 총 권수 / %d)\n", number);
+         printf("** (x/y) : (대여된 총 권수 / 보유하고 있는 총 권수)\n");
+
          for (i = 0; i < number - 1; i++)
             temp = temp -> next;
       }
@@ -1139,21 +1161,24 @@ void ISBN_search(BOOK *head){
    BOOK *temp = head;
 
    char ISBNnum[70];
-   int number,i;
+   int number, i, cnt;
 
    printf("\nISBN을 입력하세요 : ");
    gets(ISBNnum);
    while (temp){
    if (strstr(temp -> ISBN, ISBNnum)){
       number = book_number_check(temp);
+      cnt = count_book(head, temp -> name);
+
       printf("\n도서명: %s\n", temp -> name);
       printf("출판사: %s\n", temp -> publisher);
       printf("저자명: %s\n", temp -> writer);
       printf("ISBN: %s\n", temp -> ISBN);
       printf("소장처: %s\n", temp -> location);
-      printf("대여가능 여부: %c\n", temp -> borrow); //TODO (n/2)는 borrow기능 만들고 해야함
+      printf("대여가능 여부: %c(%d/%d)\n", temp -> borrow, cnt, number);
       printf("** Y는 대여가능, N은 대여불가를 의미\n");
-      printf("** (x/y) : (대여된 총 권수 / %d)\n", number);
+      printf("** (x/y) : (대여된 총 권수 / 보유하고 있는 총 권수)\n");
+
       for(i = 0; i < number - 1; i++)
          temp = temp -> next;
    }
@@ -1166,22 +1191,24 @@ void writer_search(BOOK *head){
    BOOK *temp = head;
 
    char writername[70];
-
-   int number, i;
+   int number, i, cnt;
 
    printf("\n저자명을 입력하세요 : ");
    gets(writername);
    while (temp){
       if (strstr(temp -> writer, writername)){
          number = book_number_check(temp);
+         cnt = count_book(head, temp -> name);
+
          printf("\n도서명: %s\n", temp -> name);
          printf("출판사: %s\n", temp -> publisher);
          printf("저자명: %s\n", temp -> writer);
          printf("ISBN: %s\n", temp -> ISBN);
          printf("소장처: %s\n", temp -> location);
-         printf("대여가능 여부: %c\n", temp -> borrow);
+         printf("대여가능 여부: %c(%d/%d)\n", temp -> borrow, cnt, number);
          printf("** Y는 대여가능, N은 대여불가를 의미\n");
-         printf("** (x/y) : (대여된 총 권수 / %d)\n", number);
+         printf("** (x/y) : (대여된 총 권수 / 보유하고 있는 총 권수)\n");
+
          for(i = 0; i < number - 1; i++){
             temp = temp -> next;
          }
