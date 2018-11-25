@@ -149,6 +149,8 @@ BORROW *create_borrow(char *client_id, unsigned number, time_t borrow_date, time
 
 BORROW *sort_borrow(BORROW *head);
 
+void save_borrow(BORROW *head);
+
 /////////////////////////////////borrow 관련 함수 선언
 
 void main_menu_print(void);
@@ -178,13 +180,8 @@ int my_account = 0; //로그인 정보를 저장할 전역 변수
 int main(void) {
    CLIENT *client_head = client_read();
    BOOK *book_head = book_read();
-   BORROW *borrow_head = borrow_read(); //BORROW *borrow_head = borrow_read(); --> segment fault 뜸
+   BORROW *borrow_head = borrow_read();
 
-  // main_menu(client_head, book_head, borrow_head);
-  // admin_ISBN_search(book_head);
-  //total_search(book_head);
-  //admin_bookborrow(book_head,client_head,borrow_head);
-  // printf("1");
   void total_search(BORROW *head){
      while(head){
         printf("%s | %07u | %lld | %lld\n", head -> client_id, head -> book_number, head -> borrow_date, head -> return_date);
@@ -193,6 +190,7 @@ int main(void) {
   }
 
   total_search(borrow_head);
+  save_borrow(borrow_head);
 
    return 0;
 }
@@ -782,7 +780,7 @@ BORROW *borrow_read(void) { //함수 안에서 borrow 파일 내용 받아와서
    // client_id | book_number | borrow_date | return_date : borrow 파일 데이터 형식
    //borrow 파일에서 한줄 fscanf로 받아와서 자료형에 넣어주기
 
-   while (fscanf(borrow_ifp, "%[^|] | %u | %lld | %lld", client_id, &book_number , &borrow_date , &return_date) != EOF){
+   while (fscanf(borrow_ifp, "%s | %u | %lld | %lld", client_id, &book_number, &borrow_date, &return_date) != EOF){
       add_borrow(create_borrow(client_id, book_number, borrow_date, return_date), &head);
    }
    fclose(borrow_ifp);
@@ -822,6 +820,8 @@ BORROW *create_borrow(char client_id[], unsigned book_number, time_t borrow_date
 
    strcpy(new_borrow -> client_id, client_id);
    new_borrow -> book_number = book_number;
+   new_borrow -> borrow_date = borrow_date;
+   new_borrow -> return_date = return_date;
 
    new_borrow -> next = NULL;
 
@@ -845,7 +845,7 @@ BORROW *sort_borrow(BORROW *head){
 
    for (i = 0; i < cnt - 1; i++){
       for (j = i + 1; j < cnt; j++){
-         if ((sort[i] -> client_id) > (sort[j] -> client_id))
+         if (atoll(sort[i] -> client_id) > atoll(sort[j] -> client_id))
             SWAP_BORROW(sort[i], sort[j]);
       }
    }
@@ -859,6 +859,16 @@ BORROW *sort_borrow(BORROW *head){
    free(sort);
 
    return head;
+}
+
+void save_borrow(BORROW *head){
+   FILE *borrow_ofp = fopen("borrow.txt", "w");
+   while(head){
+      fprintf(borrow_ofp, "%s | %07u | %lld | %lld\n", head -> client_id, head -> book_number,
+    head -> borrow_date, head -> return_date);
+      head = head -> next;
+   }
+   fclose(borrow_ofp);
 }
 
 void admin_bookname_search(BOOK *head){
@@ -938,7 +948,7 @@ void admin_bookborrow(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
   int correct_char(char *id,CLIENT *head){
     CLIENT *temp = head;
     while(temp){
-      if(strcmp(temp -> id,id)==0){
+      if(strcmp(temp -> id, id)==0){
         return 1;
       }
       else{
@@ -1016,6 +1026,7 @@ void admin_bookborrow(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
       printf("\n다시 입력해주세요.1");
     }
   }
+  fclose(book_ifp);
 }
 
 void book_return(BOOK *head1,CLIENT *head2, BORROW *head3){
@@ -1396,6 +1407,7 @@ void book_lend(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
       case '1':
         admin_bookname_search(book_head);
         admin_bookborrow(book_head,client_head,borrow_head);
+        save_borrow(borrow_head);
         break;
       case '2':
         admin_ISBN_search(book_head);
