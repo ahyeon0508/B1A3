@@ -985,6 +985,7 @@ void admin_bookborrow(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
     return 0;
   }
   while(1){
+    book_temp = book_head; //book 연결리스트를 헤드로 초기화시켜줌
     printf("\n도서번호를 입력하세요: ");
     scanf("%d",&get_number);
     while(book_temp -> number != get_number){
