@@ -178,26 +178,29 @@ void booksearch_menu(BOOK *book_head);
 /////////////////////////////////메뉴 함수 선언
 
 int my_account = 0; //로그인 정보를 저장할 전역 변수
-char user_id[10] = {"20180001"}; //로그인한 사용자의 id를 저장할 전역 변수
+char user_id[10] = {0}; //로그인한 사용자의 id를 저장할 전역 변수
 
 int main(void) {
    CLIENT *client_head = client_read();
    BOOK *book_head = book_read();
    BORROW *borrow_head = borrow_read();
-
-   BORROW *borrow_temp = borrow_head;
-   BOOK *book_temp = book_head;
-   while(borrow_temp){
-     if(!strcmp(borrow_temp -> client_id, user_id)){
-       printf("도서 번호: %07u\n",borrow_temp -> book_number);
-       while(borrow_temp -> book_number != book_temp -> number){
-         book_temp = book_temp -> next;
-       }
-       printf("도서명: %s\n",book_temp -> name);
-       cal_time(borrow_temp);
-     }
-     borrow_temp = borrow_temp -> next;
-   }
+   //
+   // save_borrow(borrow_head);
+   //
+   // BORROW *borrow_temp = borrow_head;
+   // BOOK *book_temp = book_head;
+   // while(borrow_temp){
+   //   if(!strcmp(borrow_temp -> client_id, user_id)){
+   //     printf("\n도서 번호: %07u\n",borrow_temp -> book_number);
+   //     while(borrow_temp -> book_number != book_temp -> number){
+   //       book_temp = book_temp -> next;
+   //     }
+   //     printf("도서명: %s\n",book_temp -> name);
+   //     cal_time(borrow_temp);
+   //   }
+   //   borrow_temp = borrow_temp -> next;
+   //   book_temp = book_head;
+   // }
 
    return 0;
 }
@@ -1165,12 +1168,14 @@ void my_borrow_list(BOOK *book_head, BORROW *borrow_head){
   printf(">> 내 대여 목록 <<\n");
   while(borrow_temp){
     if(!strcmp(borrow_temp -> client_id, user_id)){
-      printf("도서 번호: %u\n",borrow_temp -> book_number);
+      printf("\n도서 번호: %07u\n",borrow_temp -> book_number);
+      while(borrow_temp -> book_number != book_temp -> number){
+        book_temp = book_temp -> next;
+      }
       printf("도서명: %s\n",book_temp -> name);
       cal_time(borrow_temp);
     }
     borrow_temp = borrow_temp -> next;
-    book_temp = book_temp -> next;
   }
 }
 
