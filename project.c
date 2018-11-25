@@ -117,6 +117,8 @@ int max_book_number(BOOK *head);
 // 도서번호 최대가 몇인지 리턴해주는 함수
 // 도서 삽입할 때 여기서 +1한거 넣어줘야 함
 
+void cal_time(BORROW *head);
+
 void bookname_search(BOOK *head);
 
 void publisher_search(BOOK *head);
@@ -176,21 +178,26 @@ void booksearch_menu(BOOK *book_head);
 /////////////////////////////////메뉴 함수 선언
 
 int my_account = 0; //로그인 정보를 저장할 전역 변수
+char user_id[10] = {"20180001"}; //로그인한 사용자의 id를 저장할 전역 변수
 
 int main(void) {
    CLIENT *client_head = client_read();
    BOOK *book_head = book_read();
    BORROW *borrow_head = borrow_read();
 
-  void total_search(BORROW *head){
-     while(head){
-        printf("%s | %07u | %lld | %lld\n", head -> client_id, head -> book_number, head -> borrow_date, head -> return_date);
-        head = head -> next;
+   BORROW *borrow_temp = borrow_head;
+   BOOK *book_temp = book_head;
+   while(borrow_temp){
+     if(!strcmp(borrow_temp -> client_id, user_id)){
+       printf("도서 번호: %07u\n",borrow_temp -> book_number);
+       while(borrow_temp -> book_number != book_temp -> number){
+         book_temp = book_temp -> next;
+       }
+       printf("도서명: %s\n",book_temp -> name);
+       cal_time(borrow_temp);
      }
-  }
-
-  total_search(borrow_head);
-  save_borrow(borrow_head);
+     borrow_temp = borrow_temp -> next;
+   }
 
    return 0;
 }
@@ -433,6 +440,8 @@ void login_client(CLIENT *head){
    printf("\n>> 로그인 되었습니다. <<\n");
 
    my_account = res;
+
+   strcpy(user_id, id);
 }
 
 void logout_client(void){
@@ -1150,8 +1159,19 @@ void total_search(BOOK *head){
    }
 }
 
-void my_borrow_list(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
+void my_borrow_list(BOOK *book_head, BORROW *borrow_head){
+  BOOK *book_temp = book_head;
+  BORROW *borrow_temp = borrow_head;
   printf(">> 내 대여 목록 <<\n");
+  while(borrow_temp){
+    if(!strcmp(borrow_temp -> client_id, user_id)){
+      printf("도서 번호: %u\n",borrow_temp -> book_number);
+      printf("도서명: %s\n",book_temp -> name);
+      cal_time(borrow_temp);
+    }
+    borrow_temp = borrow_temp -> next;
+    book_temp = book_temp -> next;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1214,7 +1234,7 @@ void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ //�
             //도서검색
             break;
          case 2:
-            my_borrow_list(client_head, book_head, borrow_head);
+            my_borrow_list(book_head, borrow_head);
             //내 대여 목록
             break;
          case 3:
@@ -1427,4 +1447,66 @@ void book_lend(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
 
 void book_return(BOOK *book_head,CLIENT *client_head, BORROW *borrow_head){
 
+}
+void cal_time(BORROW *head){
+   struct tm *t;
+   BORROW *temp = head;
+   char *day;
+   t = localtime(&(temp -> borrow_date));
+   switch(t -> tm_wday){
+      case 0:
+         day = "일";
+         break;
+      case 1:
+         day = "월";
+         break;
+      case 2:
+         day = "화";
+         break;
+      case 3:
+         day = "수";
+         break;
+      case 4:
+         day = "목";
+         break;
+      case 5:
+         day = "금";
+         break;
+      case 6:
+         day = "토";
+         break;
+   }
+   printf("대여일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
+
+   temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
+   t = localtime(&(temp -> return_date));
+   if ((t -> tm_wday) == 0)
+      temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
+   t = localtime(&(temp -> return_date));
+   switch(t -> tm_wday){
+      case 0:
+         day = "월";
+         t -> tm_mday = t -> tm_mday + 1;
+         break;
+      case 1:
+         day = "월";
+         break;
+      case 2:
+         day = "화";
+         break;
+      case 3:
+         day = "수";
+         break;
+      case 4:
+         day = "목";
+         break;
+      case 5:
+         day = "금";
+         break;
+      case 6:
+         day = "토";
+         break;
+   }
+
+   printf("반납일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
 }
