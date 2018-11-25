@@ -129,6 +129,8 @@ void writer_search(BOOK *head);
 
 void total_search(BOOK *head);
 
+void my_borrow_list(BOOK *book_head, BORROW *borrow_head);
+
 /////////////////////////////////book 관련 함수 선언
 
 void book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head);
@@ -180,7 +182,7 @@ void booksearch_menu(BOOK *book_head);
 /////////////////////////////////메뉴 함수 선언
 
 int my_account = 0; //로그인 정보를 저장할 전역 변수
-char user_id[10] = {0}; //로그인한 사용자의 id를 저장할 전역 변수
+char user_id[10] = {"20180001"}; //로그인한 사용자의 id를 저장할 전역 변수
 
 int main(void) {
    CLIENT *client_head = client_read();
@@ -188,6 +190,8 @@ int main(void) {
    BORROW *borrow_head = borrow_read();
 
    admin_bookborrow(book_head, client_head, borrow_head);
+   my_borrow_list(book_head, borrow_head);
+
    return 0;
 }
 
@@ -1005,26 +1009,19 @@ void admin_bookborrow(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
     scanf("%c",&answer);
     if(answer == 'Y' || answer =='y'){
       FILE *book_ifp = fopen("book.txt","w");
-      FILE *borrow_ifp = fopen("borrow.txt","w");
+      FILE *borrow_ifp = fopen("borrow.txt","a");
       while(book_temp){
         if(get_number == (book_temp -> number)){
           fprintf(book_ifp, "%07u | %s| %s| %s| %s | %s| %c\n", book_temp -> number, book_temp -> name, book_temp -> publisher, book_temp -> writer, book_temp -> ISBN, book_temp -> location, 'N');
+          fprintf(borrow_ifp, "%s | %07u | %lld | %lld\n", id, get_number, time(NULL), time(NULL)+(60*60*24*30));
         }
         else{
           fprintf(book_ifp, "%07u | %s| %s| %s| %s | %s| %c\n", book_temp -> number, book_temp -> name, book_temp -> publisher, book_temp -> writer, book_temp -> ISBN, book_temp -> location, book_temp -> borrow);
         }
         book_temp = book_temp -> next;
       }
-      while(borrow_temp){
-        if(get_number == (book_temp -> number)){
-          fprintf(borrow_ifp, "%s | %07u | %lld | %lld\n", client_temp -> id, get_number, time(NULL), time(NULL)+(60*60*24*30));
-        }
-        else{
-          fprintf(borrow_ifp, "%s | %07u | %lld | %lld\n", borrow_temp -> client_id, borrow_temp -> book_number, borrow_temp ->borrow_date, borrow_temp -> return_date);
-        }
-        borrow_temp = borrow_temp -> next;
-      }
-      printf("\n도서가 대여 되었습니다.");
+      borrow_read();
+      printf("\n도서가 대여 되었습니다.\n");
       break;
     }
     else if(answer == 'N' || answer =='n'){
