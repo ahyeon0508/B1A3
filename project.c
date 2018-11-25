@@ -49,7 +49,7 @@ typedef struct book { //book 파일의 정보를 저장하기 위한 구조체
 } BOOK;
 
 typedef struct borrow { //borrow 파일의 정보를 저장하기 위한 구조체
-   unsigned client_id; //학번 (정수 8자리)
+   char *client_id; //학번 (정수 8자리)
    unsigned book_number; //도서번호 (정수 7자리)
    time_t borrow_date; //대여일자
    time_t return_date; //반납일자
@@ -145,7 +145,7 @@ BORROW *borrow_read(void);
 
 void add_borrow(BORROW *new_borrow, BORROW **head_p);
 
-BORROW *create_borrow(unsigned id, unsigned number, time_t borrow_date, time_t return_date);
+BORROW *create_borrow(char *client_id, unsigned number, time_t borrow_date, time_t return_date);
 
 BORROW *sort_borrow(BORROW *head);
 
@@ -178,21 +178,21 @@ int my_account = 0; //로그인 정보를 저장할 전역 변수
 int main(void) {
    CLIENT *client_head = client_read();
    BOOK *book_head = book_read();
-   BORROW *borrow_head; //BORROW *borrow_head = borrow_read(); --> segment fault 뜸
-  //
+   BORROW *borrow_head = borrow_read(); //BORROW *borrow_head = borrow_read(); --> segment fault 뜸
+
   // main_menu(client_head, book_head, borrow_head);
   // admin_ISBN_search(book_head);
   //total_search(book_head);
-  admin_bookborrow(book_head,client_head,borrow_head);
+  //admin_bookborrow(book_head,client_head,borrow_head);
   // printf("1");
-  // void total_search(BORROW *head){
-  //    while(head){
-  //       printf("%u | %u | %ld | %ld\n", head -> client_id, head -> book_number, head -> borrow_date, head -> return_date);
-  //       head = head -> next;
-  //    }
-  // }
-  //
-  // total_search(borrow_head);
+  void total_search(BORROW *head){
+     while(head){
+        printf("%s | %07u | %lld | %lld\n", head -> client_id, head -> book_number, head -> borrow_date, head -> return_date);
+        head = head -> next;
+     }
+  }
+
+  total_search(borrow_head);
 
    return 0;
 }
@@ -770,7 +770,7 @@ BORROW *borrow_read(void) { //함수 안에서 borrow 파일 내용 받아와서
 
    BORROW *head; //client 구조체 포인터 변수
 
-   unsigned client_id; //학번(정수 8자리)
+   char client_id[20]; //학번(정수 8자리)
    unsigned book_number; //도서 번호(정수 7자리)
    time_t borrow_date; //대여일자
    time_t return_date; //반납일자
@@ -782,7 +782,7 @@ BORROW *borrow_read(void) { //함수 안에서 borrow 파일 내용 받아와서
    // client_id | book_number | borrow_date | return_date : borrow 파일 데이터 형식
    //borrow 파일에서 한줄 fscanf로 받아와서 자료형에 넣어주기
 
-   while (fscanf(borrow_ifp, "%u | %u | %ld | %ld", client_id, book_number , borrow_date , return_date) != EOF){
+   while (fscanf(borrow_ifp, "%[^|] | %u | %lld | %lld", client_id, &book_number , &borrow_date , &return_date) != EOF){
       add_borrow(create_borrow(client_id, book_number, borrow_date, return_date), &head);
    }
    fclose(borrow_ifp);
@@ -813,12 +813,14 @@ void add_borrow(BORROW *new_borrow, BORROW **head_p) {
 
 }
 
-BORROW *create_borrow(unsigned client_id, unsigned book_number, time_t borrow_date, time_t return_date) {
+BORROW *create_borrow(char client_id[], unsigned book_number, time_t borrow_date, time_t return_date) {
    BORROW *new_borrow;
 
    MALLOC_STRUCT(BORROW, new_borrow); //borrow 구조체 포인터변수에 메모리 할당
 
-   new_borrow -> client_id = client_id;
+   MALLOC_CHAR(new_borrow, client_id);
+
+   strcpy(new_borrow -> client_id, client_id);
    new_borrow -> book_number = book_number;
 
    new_borrow -> next = NULL;
