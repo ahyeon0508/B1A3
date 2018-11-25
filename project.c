@@ -1029,7 +1029,7 @@ void admin_bookborrow(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
   fclose(book_ifp);
 }
 
-void book_return(BOOK *head1,CLIENT *head2, BORROW *head3){
+void book_return(BOOK *book_head,CLIENT *client_head, BORROW *borrow_head){
 
 }
 
@@ -1214,6 +1214,7 @@ void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ //�
             //도서검색
             break;
          case 2:
+            my_borrow_list(client_head,book_head,borrow_head);
             //내 대여 목록
             break;
          case 3:
@@ -1232,6 +1233,52 @@ void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ //�
             return;
          case 6:
             exit(0);
+            //프로그램 종료
+         default :
+            printf("잘못된 번호입니다. 다시 입력하세요");
+            sleep(2);
+            system("clear");
+      }
+   }
+}
+
+void booksearch_menu_print(void){
+   printf("\n>> 도서 검색 <<\n");
+   printf("1. 도서명 검색 2. 출판사 검색\n");
+   printf("3. ISBN 검색 4. 저자명 검색\n");
+   printf("5. 전체 검색 6. 이전 메뉴\n");
+   printf("\n번호를 선택하세요 : ");
+}
+
+void booksearch_menu(BOOK *book_head){
+   int num;
+   while(1){
+      booksearch_menu_print();
+      scanf("%d", &num);
+      CLEAR_BUFFER;
+      switch(num){
+         case 1:
+            bookname_search(book_head);
+            //도서명 검색
+            break;
+         case 2:
+            publisher_search(book_head);
+            //출판사 검색
+            break;
+         case 3:
+            ISBN_search(book_head);
+            //ISBN 검색
+            break;
+         case 4:
+            writer_search(book_head);
+            //저자명 검색
+            break;
+         case 5:
+            total_search(book_head);
+            //전체 검색
+            break;
+         case 6:
+            return;
             //프로그램 종료
          default :
             printf("잘못된 번호입니다. 다시 입력하세요");
@@ -1268,11 +1315,11 @@ void admin_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
             break;
          case 3:
             book_lend(book_head,client_head,borrow_head);
-        //도서 대여
+            //도서 대여
             break;
          case 4:
             book_return(book_head,client_head,borrow_head);
-        //도서 반납
+            //도서 반납
             break;
          case 5:
             booksearch_menu(book_head);
@@ -1335,55 +1382,9 @@ void search_menu(CLIENT *client_head){
             //전체 검색
             break;
          case 4:
+            return;
             //이전 메뉴
-            return;
           default :
-            printf("잘못된 번호입니다. 다시 입력하세요");
-            sleep(2);
-            system("clear");
-      }
-   }
-}
-
-void booksearch_menu_print(void){
-   printf("\n>> 도서 검색 <<\n");
-   printf("1. 도서명 검색 2. 출판사 검색\n");
-   printf("3. ISBN 검색 4. 저자명 검색\n");
-   printf("5. 전체 검색 6. 이전 메뉴\n");
-   printf("\n번호를 선택하세요 : ");
-}
-
-void booksearch_menu(BOOK *book_head){
-   int num;
-   while(1){
-      booksearch_menu_print();
-      scanf("%d", &num);
-      CLEAR_BUFFER;
-      switch(num){
-         case 1:
-            bookname_search(book_head);
-            //도서명 검색
-            break;
-         case 2:
-            publisher_search(book_head);
-            //출판사 검색
-            break;
-         case 3:
-            ISBN_search(book_head);
-            //ISBN 검색
-            break;
-         case 4:
-            writer_search(book_head);
-            //저자명 검색
-            break;
-         case 5:
-            total_search(book_head);
-            //전체 검색
-            break;
-         case 6:
-            return;
-            //프로그램 종료
-         default :
             printf("잘못된 번호입니다. 다시 입력하세요");
             sleep(2);
             system("clear");
@@ -1409,8 +1410,12 @@ void book_lend(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
         admin_bookborrow(book_head,client_head,borrow_head);
         save_borrow(borrow_head);
         break;
+        //도서명 검색 -> 대여 -> borrow파일에 수정내용 입력
       case '2':
         admin_ISBN_search(book_head);
+        admin_bookborrow(book_head,client_head,borrow_head);
+        save_borrow(borrow_head);
+        //ISBN 검색 -> 대여 -> borrow파일에 수정내용 입력
         break;
       default :
         printf("잘못된 번호입니다. 다시 입력하세요");
