@@ -1029,10 +1029,6 @@ void admin_bookborrow(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
   fclose(book_ifp);
 }
 
-void book_return(BOOK *book_head,CLIENT *client_head, BORROW *borrow_head){
-
-}
-
 void bookname_search(BOOK *head){
    BOOK *temp = head;
 
@@ -1154,6 +1150,10 @@ void total_search(BOOK *head){
    }
 }
 
+void my_borrow_list(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
+  printf(">> 내 대여 목록 <<\n");
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 
 void main_menu_print(void){ // 메뉴 프린트 함수
@@ -1214,7 +1214,7 @@ void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ //�
             //도서검색
             break;
          case 2:
-            my_borrow_list(client_head,book_head,borrow_head);
+            my_borrow_list(client_head, book_head, borrow_head);
             //내 대여 목록
             break;
          case 3:
@@ -1423,4 +1423,8 @@ void book_lend(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
         system("clear");
       }
     }
+}
+
+void book_return(BOOK *book_head,CLIENT *client_head, BORROW *borrow_head){
+
 }
