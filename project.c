@@ -99,8 +99,6 @@ BOOK *create_book(unsigned number, char name[], char publisher[], char writer[],
 
 void add_book(BOOK *new_book, BOOK **head_p);
 
-void insert_book(BOOK *);
-
 BOOK *sort_book(BOOK *head);
 
 void save_book(BOOK *head);
@@ -111,11 +109,11 @@ int book_number_check(BOOK *head);
 
 int count_book(BOOK *book_head, char *factor);
 
-unsigned checknum_book(BOOK *head, int num);
+int checknum_book(BOOK *head, unsigned number);
 // book 파일에 매개인자로 받은 도서번호와 같은 도서번호가 없으면 -1을 리턴
 // 있으면 head에서 몇번 움직여야 나오는지 리턴하는 함수
 
-int max_book_number(BOOK *head);
+unsigned max_book_number(BOOK *head);
 // 도서번호 최대가 몇인지 리턴해주는 함수
 // 도서 삽입할 때 여기서 +1한거 넣어줘야 함
 
@@ -135,9 +133,13 @@ void my_borrow_list(BOOK *book_head, BORROW *borrow_head);
 
 /////////////////////////////////book 관련 함수 선언
 
-void book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head);
+void admin_insert_book(BOOK *head);
 
-void book_return(BOOK *book_head, BORROW *borrow_head);
+void admin_delete_book(BOOK *head);
+
+void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head);
+
+void admin_book_return(BOOK *book_head, BORROW *borrow_head);
 
 void admin_bookname_search(BOOK *head);
 
@@ -181,10 +183,17 @@ void booksearch_menu_print(void);
 
 void booksearch_menu(BOOK *book_head);
 
+void booklend_menu_print(void);
+
+void delete_menu_print(void);
+
+void delete_menu(BOOK *book_head);
+
 /////////////////////////////////메뉴 함수 선언
 
 int my_account = 0; //로그인 정보를 저장할 전역 변수
-char user_id[10] = {"20180001"}; //로그인한 사용자의 id를 저장할 전역 변수
+// char user_id[10] = {"20180001"}; //로그인한 사용자의 id를 저장할 전역 변수
+// 위에꺼 필요 없어요
 
 int main(void) {
    CLIENT *client_head = client_read();
@@ -194,47 +203,48 @@ int main(void) {
    // admin_bookborrow(book_head, client_head, borrow_head);
    // my_borrow_list(book_head, borrow_head); //방금 대여한 책이 txt에 입력이 되는데 연결리스트로 안들어감
 
-   bookname_search(book_head);
-   ISBN_search(book_head);
-   publisher_search(book_head);
-   writer_search(book_head);
+   // admin_bookname_search(book_head);
+   // admin_delete_book(book_head);
+   // total_search(book_head);
+
+	main_menu(client_head, book_head, borrow_head);
 
    return 0;
 }
 
 CLIENT *client_read(void) { //함수 안에서 client 파일 내용 받아와서 CLIENT 구조체에 내용 넣는 함수
-   FILE *client_ifp; //client 파일 내용 받아오는 포인터 변수
+	FILE *client_ifp; //client 파일 내용 받아오는 포인터 변수
 
-   if ((client_ifp = fopen("client.txt", "r")) == NULL) { //client 파일 읽어오기
-     printf("client.txt 파일이 존재하지 않습니다.\n"); //파일 없으면 오류 메시지 출력
-     exit(1); //프로그램 종료
-   }
+	if ((client_ifp = fopen("client.txt", "r")) == NULL) { //client 파일 읽어오기
+		printf("client.txt 파일이 존재하지 않습니다.\n"); //파일 없으면 오류 메시지 출력
+		exit(1); //프로그램 종료
+	}
 
 
-   CLIENT *head; //client 구조체 포인터 변수
+	CLIENT *head; //client 구조체 포인터 변수
 
-   char id[10]; //학번 (정수 8자리)
-   char password[20]; //비밀번호
-   char name[25]; //이름
-   char address[100]; //주소
-   char phone_number[30]; //전화번호
+	char id[10]; //학번 (정수 8자리)
+	char password[20]; //비밀번호
+	char name[25]; //이름
+	char address[100]; //주소
+	char phone_number[30]; //전화번호
 
-   MALLOC_STRUCT(CLIENT, head); //client 구조체 포인터변수에 메모리 할당
+	MALLOC_STRUCT(CLIENT, head); //client 구조체 포인터변수에 메모리 할당
 
-   head -> next = NULL; //시작 부분
+	head -> next = NULL; //시작 부분
 
-   // id | password | name | address | phone_number : client 파일 데이터 형식
-   //client 파일에서 한줄 fscanf로 받아와서 자료형에 넣어주기
+	// id | password | name | address | phone_number : client 파일 데이터 형식
+	//client 파일에서 한줄 fscanf로 받아와서 자료형에 넣어주기
 
-   while (fscanf(client_ifp, "%s | %s | %s | %[^|] | %s", id, password, name, address,
-   phone_number) != EOF){
-      add_client(create_client(id, password, name, address, phone_number), &head);
-   }
-   fclose(client_ifp);
+	while (fscanf(client_ifp, "%s | %s | %s | %[^|] | %s", id, password, name, address,
+	phone_number) != EOF){
+		add_client(create_client(id, password, name, address, phone_number), &head);
+	}
+	fclose(client_ifp);
 
-   head = sort_client(head);
+	head = sort_client(head);
 
-   return head;
+	return head;
 }
 
 void add_client(CLIENT *new_client, CLIENT **head_p) {
@@ -601,43 +611,6 @@ BOOK *create_book(unsigned number, char name[], char publisher[], char writer[],
 		return new_book;
 }
 
-void insert_book(BOOK *head){
-      unsigned number;
-   char name[70]; //도서명
-   char publisher[40]; //출판사
-   char ISBN[20]; //ISBN(정수 13자리)
-   char writer[40]; //저자명
-   char location[40]; //소장처
-   char borrow;
-   char buf;
-
-   number = max_book_number(head) + 1;   //자동 입력 사항
-   borrow = 'Y';
-
-   printf("\n>> 도서 등록 <<\n");
-   printf("도서명 : ");
-   gets(name);
-   printf("출판사 : ");
-   gets(publisher);
-   printf("저자명 : ");
-   gets(writer);
-   printf("ISBN : ");
-   scanf("%s", ISBN);
-   CLEAR_BUFFER;
-   printf("소장처 : ");
-   gets(location);
-
-   printf("\n자동입력 사항\n");
-   printf("대여가능 여부 : %c\n", borrow);
-   printf("도서번호 : %u\n", number);
-
-   printf("등록하려면 Y를 입력해주세요 : ");
-
-   buf = getchar();
-   if (buf == 'Y' || buf == 'y')
-      add_book(create_book(number, name, publisher, writer, ISBN, location, borrow), &head);
-}
-
 BOOK *sort_book(BOOK *head){
    BOOK *temp = head;
 
@@ -739,7 +712,7 @@ int book_number_check(BOOK *head){
    return res;
 }
 
-unsigned checknum_book(BOOK *head, int number){
+int checknum_book(BOOK *head, unsigned number){
    int res = -1;
    int cnt = 0;
 
@@ -753,7 +726,7 @@ unsigned checknum_book(BOOK *head, int number){
    return res;
 }
 
-int max_book_number(BOOK *head){
+unsigned max_book_number(BOOK *head){
    int res = head -> number;
 
    while(head){
@@ -770,8 +743,8 @@ BORROW *borrow_read(void) { //함수 안에서 borrow 파일 내용 받아와서
    FILE *borrow_ifp; //borrow 파일 내용 받아오는 포인터 변수
 
    if ((borrow_ifp = fopen("borrow.txt", "r")) == NULL) { //borrow 파일 읽어오기
-     printf("borrow.txt 파일이 존재하지 않습니다.\n"); //파일 없으면 오류 메시지 출력
-     exit(1); //프로그램 종료
+      printf("borrow.txt 파일이 존재하지 않습니다.\n"); //파일 없으면 오류 메시지 출력
+      exit(1); //프로그램 종료
    }
 
 
@@ -816,97 +789,170 @@ void add_borrow(BORROW *new_borrow, BORROW **head_p) {
    else {                     //자료가 세번째 이후로 입력될 때
       new_borrow -> next = (*head_p) -> next;  //이전의 노드가 마지막 노드
       (*head_p) -> next = new_borrow;  //처음 노드가 새로 추가된 노드를 가리킴
-   }
-
+   }  
 }
 
 BORROW *create_borrow(char client_id[], unsigned book_number, time_t borrow_date, time_t return_date) {
-   BORROW *new_borrow;
+	BORROW *new_borrow;
 
-   MALLOC_STRUCT(BORROW, new_borrow); //borrow 구조체 포인터변수에 메모리 할당
+	MALLOC_STRUCT(BORROW, new_borrow); //borrow 구조체 포인터변수에 메모리 할당
 
-   MALLOC_CHAR(new_borrow, client_id);
+	MALLOC_CHAR(new_borrow, client_id);
 
-   strcpy(new_borrow -> client_id, client_id);
-   new_borrow -> book_number = book_number;
-   new_borrow -> borrow_date = borrow_date;
-   new_borrow -> return_date = return_date;
+	strcpy(new_borrow -> client_id, client_id);
+	new_borrow -> book_number = book_number;
+	new_borrow -> borrow_date = borrow_date;
+	new_borrow -> return_date = return_date;
 
-   new_borrow -> next = NULL;
+	new_borrow -> next = NULL;
 
-   return new_borrow;
+	return new_borrow;
 }
 
 BORROW *sort_borrow(BORROW *head){
-   BORROW *temp = head;
+	BORROW *temp = head;
 
-   int i, j, cnt = 0;
+	int i, j, cnt = 0;
 
-   while(temp){
-      temp = temp -> next;
-      cnt++;
+	while(temp){
+		temp = temp -> next;
+		cnt++;
+	}
+
+	BORROW **sort = (BORROW **) malloc(sizeof(BORROW *) * cnt);
+
+	for (i = 0, temp = head; i < cnt; temp = temp -> next)
+		sort[i++] = temp;
+
+	for (i = 0; i < cnt - 1; i++){
+		for (j = i + 1; j < cnt; j++){
+			if (atoll(sort[i] -> client_id) > atoll(sort[j] -> client_id))
+			SWAP_BORROW(sort[i], sort[j]);
+		}
    }
 
-   BORROW **sort = (BORROW **) malloc(sizeof(BORROW *) * cnt);
+	head = sort[0];
 
-   for (i = 0, temp = head; i < cnt; temp = temp -> next)
-      sort[i++] = temp;
+	for (i = 1, temp = head; i < cnt && temp; temp = temp -> next)
+		temp -> next = sort[i++];
+	temp -> next = NULL;
 
-   for (i = 0; i < cnt - 1; i++){
-      for (j = i + 1; j < cnt; j++){
-         if (atoll(sort[i] -> client_id) > atoll(sort[j] -> client_id))
-            SWAP_BORROW(sort[i], sort[j]);
-      }
-   }
+	free(sort);
 
-   head = sort[0];
-
-   for (i = 1, temp = head; i < cnt && temp; temp = temp -> next)
-      temp -> next = sort[i++];
-   temp -> next = NULL;
-
-   free(sort);
-
-   return head;
+	return head;
 }
 
 void save_borrow(BORROW *head){
-   FILE *borrow_ofp = fopen("borrow.txt", "w");
-   while(head){
-      fprintf(borrow_ofp, "%s | %07u | %lld | %lld\n", head -> client_id, head -> book_number,
-    head -> borrow_date, head -> return_date);
-      head = head -> next;
-   }
-   fclose(borrow_ofp);
+	FILE *borrow_ofp = fopen("borrow.txt", "w");
+	while(head){
+		fprintf(borrow_ofp, "%s | %07u | %lld | %lld\n", head -> client_id, head -> book_number,
+	head -> borrow_date, head -> return_date);
+		head = head -> next;
+	}
+	fclose(borrow_ofp);
 }
 
-void admin_bookname_search(BOOK *head){
-  BOOK *temp = head;
 
-   char bookname[70];
-   int number, i;
+void admin_insert_book(BOOK *head){
+   unsigned number;
+   char name[70]; //도서명
+   char publisher[40]; //출판사
+   char ISBN[20]; //ISBN(정수 13자리)
+   char writer[40]; //저자명
+   char location[40]; //소장처
+   char borrow;
+   char buf;
 
-   printf("\n도서명을 입력하세요: ");
-   gets(bookname);
-   while(temp){
-      if (strstr(temp -> name, bookname)){
-         number = book_number_check(temp);
-      printf("\n>> 검색 결과 <<\n");
-      printf("도서번호: ");
-      for(i = 0; i < number - 1; i++){
-           printf("%07d(삭제 가능 여부 : %c), ", temp -> number, temp -> borrow);
-        temp = temp -> next;
-      }
-      printf("%07d(삭제 가능 여부 : %c) ", temp -> number, temp -> borrow);
-         printf("\n도서명: %s\n", temp -> name);
-         printf("출판사: %s\n", temp -> publisher);
-         printf("저자명: %s\n", temp -> writer);
-         printf("ISBN: %s\n", temp -> ISBN);
-         printf("소장처: %s\n", temp -> location);
+   number = max_book_number(head) + 1;   //자동 입력 사항
+   borrow = 'Y';
 
-      }
-      temp = temp -> next;
+   printf("\n>> 도서 등록 <<\n");
+   printf("도서명 : ");
+   gets(name);
+   printf("출판사 : ");
+   gets(publisher);
+   printf("저자명 : ");
+   gets(writer);
+   printf("ISBN : ");
+   scanf("%s", ISBN);
+   CLEAR_BUFFER;
+   printf("소장처 : ");
+   gets(location);
+
+   printf("\n자동입력 사항\n");
+   printf("대여가능 여부 : %c\n", borrow);
+   printf("도서번호 : %u\n", number);
+
+   printf("등록하려면 Y를 입력해주세요 : ");
+
+   buf = getchar();
+   if (buf == 'Y' || buf == 'y')
+      add_book(create_book(number, name, publisher, writer, ISBN, location, borrow), &head);
+}
+
+void admin_delete_book(BOOK *head){
+   BOOK *temp = head;
+   unsigned number; //받을 도서번호
+   int position; //도서번호에 해당하는 도서의 위치
+   int i;
+   char buf;    
+
+   printf("\n삭제할 도서의 번호를 입력하세요 : ");
+   scanf("%u", &number);
+   CLEAR_BUFFER;
+
+   //도서번호 이상한거 입력했을 때 함수 리턴
+   if ((position = checknum_book(head, number)) == -1){ 
+      printf("\n도서번호가 존재하지 않습니다. 이전 메뉴로 돌아갑니다...\n");
+      return;
    }
+
+   //checknum_book에서 받아온 위치로 temp를 이동
+   for (i = 0; i < position; i++)
+      temp = temp -> next;    
+   
+   //도서가 대여 상태인 경우
+   if (temp -> borrow == 'Y'){
+      printf("\n이 도서는 삭제할 수 없습니다.\n");
+      return;
+   }
+
+   printf("삭제하려면 Y를 입력해주세요 : ");
+
+   buf = getchar();
+   if (buf == 'Y' || buf == 'y')
+      remove_book(&head, position);
+}
+
+
+
+void admin_bookname_search(BOOK *head){
+	BOOK *temp = head;
+
+	char bookname[70];
+	int number, i;
+
+	printf("\n도서명을 입력하세요: ");
+	gets(bookname);
+	while(temp){
+		if (strstr(temp -> name, bookname)){
+			number = book_number_check(temp);
+		printf("\n>> 검색 결과 <<\n");
+		printf("도서번호: ");
+		for(i = 0; i < number - 1; i++){
+			printf("%07d (삭제 가능 여부 : %c), ", temp -> number, temp -> borrow);
+		temp = temp -> next;
+		}
+		printf("%07d (삭제 가능 여부 : %c) ", temp -> number, temp -> borrow);
+			printf("\n도서명: %s\n", temp -> name);
+			printf("출판사: %s\n", temp -> publisher);
+			printf("저자명: %s\n", temp -> writer);
+			printf("ISBN: %s\n", temp -> ISBN);
+			printf("소장처: %s\n", temp -> location);
+
+		}
+		temp = temp -> next;
+	}
 }
 
 void admin_ISBN_search(BOOK *head){
@@ -923,10 +969,10 @@ void admin_ISBN_search(BOOK *head){
       printf("\n>> 검색 결과 <<\n");
       printf("도서번호: ");
       for(i = 0; i < number - 1; i++){
-           printf("%07d(삭제 가능 여부 : %c), ", temp -> number, temp -> borrow);
+           printf("%07d (삭제 가능 여부 : %c), ", temp -> number, temp -> borrow);
         temp = temp -> next;
       }
-      printf("%07d(삭제 가능 여부 : %c) ", temp -> number, temp -> borrow);
+      printf("%07d (삭제 가능 여부 : %c) ", temp -> number, temp -> borrow);
          printf("\n도서명: %s\n", temp -> name);
          printf("출판사: %s\n", temp -> publisher);
          printf("저자명: %s\n", temp -> writer);
@@ -938,59 +984,188 @@ void admin_ISBN_search(BOOK *head){
    }
 }
 
-void admin_bookborrow(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
+
+void admin_book_lend(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
+  int num;
+  while(1){
+    booklend_menu_print();
+    scanf("%d", &num);
+    CLEAR_BUFFER;
+    switch(num){
+      case '1':
+        admin_bookname_search(book_head);
+        admin_bookborrow(book_head,client_head,borrow_head);
+        save_borrow(borrow_head);
+        break;
+        //도서명 검색 -> 대여 -> borrow파일에 수정내용 입력
+      case '2':
+        admin_ISBN_search(book_head);
+        admin_bookborrow(book_head,client_head,borrow_head);
+        save_borrow(borrow_head);
+        //ISBN 검색 -> 대여 -> borrow파일에 수정내용 입력
+        break;
+      default :
+        printf("잘못된 번호입니다. 다시 입력하세요");
+        sleep(2);
+        system("clear");
+      }
+    }
+}
+
+void admin_book_return(BOOK *book_head, BORROW *borrow_head){
   BOOK *book_temp = book_head;
-  CLIENT *client_temp = client_head;
   BORROW *borrow_temp = borrow_head;
   char id[10];
-  unsigned get_number;
-  char answer;
+  int return_book_number;
+  printf("학번을 입력하세요: ");
+  scanf("%s", id);
+  printf("\n>> 회원의 대여 목록 <<\n");
 
-  FILE *book_ifp, *borrow_ifp;
-  if((book_ifp = fopen("book.txt","r")) == NULL){
-    printf("book.txt 파일이 존재하지 않습니다.\n");
-  }
-  if((borrow_ifp = fopen("borrow.txt","r")) == NULL){
-    printf("borrow.txt 파일이 존재하지 않습니다.\n");
+  while(borrow_temp){
+    if(!strcmp(borrow_temp -> client_id, id)){
+      printf("\n도서 번호: %07u\n", borrow_temp -> book_number);
+      while(borrow_temp -> book_number != book_temp -> number){
+        book_temp = book_temp -> next;
+      }
+      printf("도서명: %s\n", book_temp -> name);
+      cal_time(borrow_temp);
+    }
+    borrow_temp = borrow_temp -> next;
+    book_temp = book_head; //book 연결리스트 헤드로 다시 초기화
   }
 
-  int correct_char(char *id,CLIENT *head){
-    CLIENT *temp = head;
-    while(temp){
+  borrow_temp = borrow_head; //borrow 연결리스트 헤드로 다시 초기화
+
+  printf("반납할 도서번호를 입력하세요: ");
+  scanf("%d", &return_book_number);
+  while(borrow_temp){
+    if(borrow_temp -> book_number == return_book_number){
+      admin_bookreturn(book_head, borrow_head, return_book_number);
+    }
+    borrow_temp = borrow_temp -> next;
+  }
+
+
+}
+
+void cal_time(BORROW *head){
+   struct tm *t;
+   BORROW *temp = head;
+   char *day;
+   t = localtime(&(temp -> borrow_date));
+   switch(t -> tm_wday){
+      case 0:
+         day = "일";
+         break;
+      case 1:
+         day = "월";
+         break;
+      case 2:
+         day = "화";
+         break;
+      case 3:
+         day = "수";
+         break;
+      case 4:
+         day = "목";
+         break;
+      case 5:
+         day = "금";
+         break;
+      case 6:
+         day = "토";
+         break;
+   }
+   printf("대여일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
+
+   temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
+   t = localtime(&(temp -> return_date));
+   if ((t -> tm_wday) == 0)
+      temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
+   t = localtime(&(temp -> return_date));
+   switch(t -> tm_wday){
+      case 0:
+         day = "월";
+         t -> tm_mday = t -> tm_mday + 1;
+         break;
+      case 1:
+         day = "월";
+         break;
+      case 2:
+         day = "화";
+         break;
+      case 3:
+         day = "수";
+         break;
+      case 4:
+         day = "목";
+         break;
+      case 5:
+         day = "금";
+         break;
+      case 6:
+         day = "토";
+         break;
+   }
+
+   printf("반납일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
+}
+
+void admin_bookborrow(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head){
+   BOOK *book_temp = book_head;
+   CLIENT *client_temp = client_head;
+   BORROW *borrow_temp = borrow_head;
+
+   char id[10];
+   unsigned get_number;
+   char answer;
+
+   FILE *book_ifp, *borrow_ifp;
+   if ((book_ifp = fopen("book.txt","r")) == NULL){
+      printf("book.txt 파일이 존재하지 않습니다.\n");
+   }
+   if ((borrow_ifp = fopen("borrow.txt","r")) == NULL){
+      printf("borrow.txt 파일이 존재하지 않습니다.\n");
+   }
+
+   int correct_char(char *id, CLIENT *head){
+      CLIENT *temp = head;
+      while(temp){
       if(strcmp(temp -> id, id)==0){
-        return 1;
+         return 1;
       }
       else{
-        temp = temp -> next;
+         temp = temp -> next;
       }
-    }
-    return 0;
-  }
+   }
 
-  while(1){
-    printf("\n학번을 입력하세요: ");
-    scanf("%s",id);
-    if(correct_char(id,client_temp)){
+   return 0;
+}   
+
+   while(1){
+      printf("\n학번을 입력하세요: ");
+      scanf("%s",id);
+      if (correct_char(id, client_temp)){
       CLEAR_BUFFER;
       break;
-    }
-    else{
+      }
+      else {
       printf("\n다시 입력해주세요.");
-    }
+      }
   }
 
-  int correct_int(int number,BOOK *head){
-    BOOK *temp = head;
-    while(temp){
-      if(temp -> number == number){
-        return 1;
+int correct_int(int number,BOOK *head){
+   BOOK *temp = head;
+   while(temp){
+      if (temp -> number == number){
+         return 1;
       }
-      else{
-        temp = temp -> next;
+      else {
+         temp = temp -> next;
       }
-    }
-    return 0;
-  }
+   }
+   return 0;
+}
   while(1){
     book_temp = book_head; //book 연결리스트를 헤드로 초기화시켜줌
     printf("\n도서번호를 입력하세요: ");
@@ -1085,6 +1260,7 @@ void admin_bookreturn(BOOK *book_head, BORROW *borrow_head, int return_book_numb
   fclose(book_ifp);
   fclose(borrow_ifp);
 }
+
 int count_book(BOOK *book_head, char *factor){
   BOOK *book_temp = book_head;
 
@@ -1281,6 +1457,7 @@ void main_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ // �
             printf("잘못된 번호입니다. 다시 입력하세요");
             sleep(2);
             system("clear");
+            break;
       }
    }
 }
@@ -1329,6 +1506,7 @@ void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ //�
             printf("잘못된 번호입니다. 다시 입력하세요");
             sleep(2);
             system("clear");
+            break;
       }
    }
 }
@@ -1375,6 +1553,7 @@ void booksearch_menu(BOOK *book_head){
             printf("잘못된 번호입니다. 다시 입력하세요");
             sleep(2);
             system("clear");
+            break;
       }
    }
 }
@@ -1394,43 +1573,46 @@ void admin_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
       admin_menu_print();
       scanf("%d", &num);
       CLEAR_BUFFER;
+
       switch(num){
-         case 1:
-            insert_book(book_head);
+         case 1 :
+            admin_insert_book(book_head);
             book_head = sort_book(book_head);
             save_book(book_head);
             //도서 등록
             break;
-         case 2:
+         case 2 :
+            delete_menu(book_head);
             //도서 삭제
             break;
-         case 3:
-            book_lend(book_head, client_head, borrow_head);
+         case 3 :
+            admin_book_lend(book_head, client_head, borrow_head);
             //도서 대여
             break;
-         case 4:
-            book_return(book_head, borrow_head);
+         case 4 :
+            admin_book_return(book_head, borrow_head);
             //도서 반납
             break;
-         case 5:
+         case 5 :
             booksearch_menu(book_head);
             //도서 검색
             break;
-         case 6:
+         case 6 :
             search_menu(client_head);
             //회원 목록
             break;
-         case 7:
+         case 7 :
             logout_client();
             //로그아웃
             return;
-         case 8:
+         case 8 :
             exit(0);
             //프로그램 종료
           default :
             printf("잘못된 번호입니다. 다시 입력하세요");
             sleep(2);
             system("clear");
+            break;
       }
    }
 }
@@ -1439,7 +1621,7 @@ void search_menu_print(void){
    printf("\n>> 회원 목록 << \n");
    printf("1. 이름 검색   2. 학번 검색\n");
    printf("3. 전체 검색   4. 이전 메뉴\n");
-  printf("\n번호를 선택하세요 : ");
+   printf("\n번호를 선택하세요 : ");
 }
 
 void search_menu(CLIENT *client_head){
@@ -1475,141 +1657,52 @@ void search_menu(CLIENT *client_head){
          case 4:
             return;
             //이전 메뉴
-          default :
+         default :
             printf("잘못된 번호입니다. 다시 입력하세요");
             sleep(2);
             system("clear");
+            break;
       }
    }
 }
 
 void booklend_menu_print(void){
-  printf(">> 도서 대여 <<\n");
-  printf("1. 도서명 검색   2. ISBN 검색\n\n");
-  printf("검색 번호를 입력하세요: ");
+   printf("\n>> 도서 대여 <<\n");
+   printf("1. 도서명 검색   2. ISBN 검색\n\n");
+   printf("\n검색 번호를 입력하세요: ");
 }
 
-void book_lend(BOOK *book_head,CLIENT *client_head,BORROW *borrow_head){
-  int num;
-  while(1){
-    booklend_menu_print();
-    scanf("%d", &num);
-    CLEAR_BUFFER;
-    switch(num){
-      case '1':
-        admin_bookname_search(book_head);
-        admin_bookborrow(book_head,client_head,borrow_head);
-        save_borrow(borrow_head);
-        break;
-        //도서명 검색 -> 대여 -> borrow파일에 수정내용 입력
-      case '2':
-        admin_ISBN_search(book_head);
-        admin_bookborrow(book_head,client_head,borrow_head);
-        save_borrow(borrow_head);
-        //ISBN 검색 -> 대여 -> borrow파일에 수정내용 입력
-        break;
+void delete_menu_print(void){
+   printf("\n>> 도서 삭제 <<\n");
+   printf("1. 도서명 검색  2. ISBN 검색\n");
+   printf("\n검색 번호를 입력하세요 : ");
+}
+
+void delete_menu(BOOK *book_head){
+   int num;
+   
+   delete_menu_print();
+   scanf("%d", &num);
+   CLEAR_BUFFER;
+
+   switch(num){
+      case 1 :
+         admin_bookname_search(book_head);
+         admin_delete_book(book_head);
+         book_head = sort_book(book_head);
+         save_book(book_head);
+         break;
+      case 2 :
+         admin_ISBN_search(book_head);
+         admin_delete_book(book_head);
+         book_head = sort_book(book_head);
+         save_book(book_head);
+         break;
       default :
-        printf("잘못된 번호입니다. 다시 입력하세요");
-        sleep(2);
-        system("clear");
-      }
-    }
-}
-
-void book_return(BOOK *book_head, BORROW *borrow_head){
-  BOOK *book_temp = book_head;
-  BORROW *borrow_temp = borrow_head;
-  char id[10];
-  int return_book_number;
-  printf("학번을 입력하세요: ");
-  scanf("%s", id);
-  printf("\n>> 회원의 대여 목록 <<\n");
-
-  while(borrow_temp){
-    if(!strcmp(borrow_temp -> client_id, id)){
-      printf("\n도서 번호: %07u\n", borrow_temp -> book_number);
-      while(borrow_temp -> book_number != book_temp -> number){
-        book_temp = book_temp -> next;
-      }
-      printf("도서명: %s\n", book_temp -> name);
-      cal_time(borrow_temp);
-    }
-    borrow_temp = borrow_temp -> next;
-    book_temp = book_head; //book 연결리스트 헤드로 다시 초기화
-  }
-
-  borrow_temp = borrow_head; //borrow 연결리스트 헤드로 다시 초기화
-
-  printf("반납할 도서번호를 입력하세요: ");
-  scanf("%d", &return_book_number);
-  while(borrow_temp){
-    if(borrow_temp -> book_number == return_book_number){
-      admin_bookreturn(book_head, borrow_head, return_book_number);
-    }
-    borrow_temp = borrow_temp -> next;
-  }
-
-
-}
-void cal_time(BORROW *head){
-   struct tm *t;
-   BORROW *temp = head;
-   char *day;
-   t = localtime(&(temp -> borrow_date));
-   switch(t -> tm_wday){
-      case 0:
-         day = "일";
-         break;
-      case 1:
-         day = "월";
-         break;
-      case 2:
-         day = "화";
-         break;
-      case 3:
-         day = "수";
-         break;
-      case 4:
-         day = "목";
-         break;
-      case 5:
-         day = "금";
-         break;
-      case 6:
-         day = "토";
-         break;
+         printf("잘못된 번호입니다. 이전 메뉴로 돌아갑니다.");
+         sleep(2);
+         system("clear");
+         return;
    }
-   printf("대여일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
-
-   temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
-   t = localtime(&(temp -> return_date));
-   if ((t -> tm_wday) == 0)
-      temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
-   t = localtime(&(temp -> return_date));
-   switch(t -> tm_wday){
-      case 0:
-         day = "월";
-         t -> tm_mday = t -> tm_mday + 1;
-         break;
-      case 1:
-         day = "월";
-         break;
-      case 2:
-         day = "화";
-         break;
-      case 3:
-         day = "수";
-         break;
-      case 4:
-         day = "목";
-         break;
-      case 5:
-         day = "금";
-         break;
-      case 6:
-         day = "토";
-         break;
-   }
-
-   printf("반납일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
 }
+
