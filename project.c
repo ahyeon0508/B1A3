@@ -207,7 +207,10 @@ int main(void) {
    // admin_delete_book(book_head);
    // total_search(book_head);
 
-	main_menu(client_head, book_head, borrow_head);
+   while(borrow_head){
+     cal_time(borrow_head);
+     borrow_head = borrow_head -> next;
+   }
 
    return 0;
 }
@@ -789,7 +792,7 @@ void add_borrow(BORROW *new_borrow, BORROW **head_p) {
    else {                     //자료가 세번째 이후로 입력될 때
       new_borrow -> next = (*head_p) -> next;  //이전의 노드가 마지막 노드
       (*head_p) -> next = new_borrow;  //처음 노드가 새로 추가된 노드를 가리킴
-   }  
+   }
 }
 
 BORROW *create_borrow(char client_id[], unsigned book_number, time_t borrow_date, time_t return_date) {
@@ -895,22 +898,22 @@ void admin_delete_book(BOOK **head_p){
    unsigned number; //받을 도서번호
    int position; //도서번호에 해당하는 도서의 위치
    int i;
-   char buf;    
+   char buf;
 
    printf("\n삭제할 도서의 번호를 입력하세요 : ");
    scanf("%u", &number);
    CLEAR_BUFFER;
 
    //도서번호 이상한거 입력했을 때 함수 리턴
-   if ((position = checknum_book(*head_p, number)) == -1){ 
+   if ((position = checknum_book(*head_p, number)) == -1){
       printf("\n도서번호가 존재하지 않습니다. 이전 메뉴로 돌아갑니다...\n");
       return;
    }
 
    //checknum_book에서 받아온 위치로 temp를 이동
    for (i = 0; i < position; i++)
-      temp = temp -> next;    
-   
+      temp = temp -> next;
+
    //도서가 대여 상태인 경우
    if (temp -> borrow == 'N'){
       printf("\n이 도서는 삭제할 수 없습니다.\n");
@@ -1079,12 +1082,11 @@ void cal_time(BORROW *head){
    temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
    t = localtime(&(temp -> return_date));
    if ((t -> tm_wday) == 0)
-      temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 30);
+      temp -> return_date = (temp -> borrow_date) + (60 * 60 * 24 * 31);
    t = localtime(&(temp -> return_date));
    switch(t -> tm_wday){
       case 0:
-         day = "월";
-         t -> tm_mday = t -> tm_mday + 1;
+         day = "일";
          break;
       case 1:
          day = "월";
@@ -1106,7 +1108,7 @@ void cal_time(BORROW *head){
          break;
    }
 
-   printf("반납일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
+    printf("반납일자 : %d년 %d월 %d일 %s요일\n", 1900 + t -> tm_year, t -> tm_mon + 1, t -> tm_mday, day);
 }
 
 void admin_bookborrow(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head){
@@ -1138,7 +1140,7 @@ void admin_bookborrow(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head)
    }
 
    return 0;
-}   
+}
 
    while(1){
       printf("\n학번을 입력하세요: ");
@@ -1678,7 +1680,7 @@ void delete_menu_print(void){
 
 BOOK *delete_menu(BOOK *book_head){
    int num;
-   
+
    delete_menu_print();
    scanf("%d", &num);
    CLEAR_BUFFER;
@@ -1705,4 +1707,3 @@ BOOK *delete_menu(BOOK *book_head){
 
    return book_head;
 }
-
