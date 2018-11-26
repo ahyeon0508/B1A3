@@ -1687,7 +1687,7 @@ BOOK *delete_menu(BOOK *book_head){
       case 1 :
          admin_bookname_search(book_head);
          admin_delete_book(&book_head);
-         // book_head = sort_book(book_head);
+         book_head = sort_book(book_head);
          save_book(book_head);
          break;
       case 2 :
