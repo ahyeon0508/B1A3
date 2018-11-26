@@ -135,7 +135,7 @@ void my_borrow_list(BOOK *book_head, BORROW *borrow_head);
 
 void admin_insert_book(BOOK *head);
 
-void admin_delete_book(BOOK *head);
+void admin_delete_book(BOOK **head_p);
 
 void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head);
 
@@ -187,12 +187,12 @@ void booklend_menu_print(void);
 
 void delete_menu_print(void);
 
-void delete_menu(BOOK *book_head);
+BOOK *delete_menu(BOOK *book_head);
 
 /////////////////////////////////메뉴 함수 선언
 
 int my_account = 0; //로그인 정보를 저장할 전역 변수
-// char user_id[10] = {"20180001"}; //로그인한 사용자의 id를 저장할 전역 변수
+char user_id[10] = {"20180001"}; //로그인한 사용자의 id를 저장할 전역 변수
 // 위에꺼 필요 없어요
 
 int main(void) {
@@ -665,14 +665,14 @@ void remove_book(BOOK **head_p, int position){
    BOOK *previous = *head_p, *after = *head_p, *temp = *head_p;
 
    if (position == 0){
-      temp = ((*head_p) -> next);
-      free((*head_p) -> name);
-      free((*head_p) -> publisher);
-      free((*head_p) -> writer);
-      free((*head_p) -> ISBN);
-      free((*head_p) -> location);
-      free((*head_p));
-      (*head_p) = temp;
+      *head_p = ((*head_p) -> next);
+      // free((*head_p) -> name);
+      // free((*head_p) -> publisher);
+      // free((*head_p) -> writer);
+      // free((*head_p) -> ISBN);
+      // free((*head_p) -> location);
+      // free((*head_p));
+      // *head_p = temp;
    }
    else {
       for (int i = 0; i < position - 1; i++)
@@ -890,8 +890,8 @@ void admin_insert_book(BOOK *head){
       add_book(create_book(number, name, publisher, writer, ISBN, location, borrow), &head);
 }
 
-void admin_delete_book(BOOK *head){
-   BOOK *temp = head;
+void admin_delete_book(BOOK **head_p){
+   BOOK *temp = *head_p;
    unsigned number; //받을 도서번호
    int position; //도서번호에 해당하는 도서의 위치
    int i;
@@ -902,7 +902,7 @@ void admin_delete_book(BOOK *head){
    CLEAR_BUFFER;
 
    //도서번호 이상한거 입력했을 때 함수 리턴
-   if ((position = checknum_book(head, number)) == -1){ 
+   if ((position = checknum_book(*head_p, number)) == -1){ 
       printf("\n도서번호가 존재하지 않습니다. 이전 메뉴로 돌아갑니다...\n");
       return;
    }
@@ -912,7 +912,7 @@ void admin_delete_book(BOOK *head){
       temp = temp -> next;    
    
    //도서가 대여 상태인 경우
-   if (temp -> borrow == 'Y'){
+   if (temp -> borrow == 'N'){
       printf("\n이 도서는 삭제할 수 없습니다.\n");
       return;
    }
@@ -921,10 +921,8 @@ void admin_delete_book(BOOK *head){
 
    buf = getchar();
    if (buf == 'Y' || buf == 'y')
-      remove_book(&head, position);
+      remove_book(head_p, position);
 }
-
-
 
 void admin_bookname_search(BOOK *head){
 	BOOK *temp = head;
@@ -1582,7 +1580,7 @@ void admin_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
             //도서 등록
             break;
          case 2 :
-            delete_menu(book_head);
+            book_head = delete_menu(book_head);
             //도서 삭제
             break;
          case 3 :
@@ -1678,7 +1676,7 @@ void delete_menu_print(void){
    printf("\n검색 번호를 입력하세요 : ");
 }
 
-void delete_menu(BOOK *book_head){
+BOOK *delete_menu(BOOK *book_head){
    int num;
    
    delete_menu_print();
@@ -1688,13 +1686,13 @@ void delete_menu(BOOK *book_head){
    switch(num){
       case 1 :
          admin_bookname_search(book_head);
-         admin_delete_book(book_head);
-         book_head = sort_book(book_head);
+         admin_delete_book(&book_head);
+         // book_head = sort_book(book_head);
          save_book(book_head);
          break;
       case 2 :
          admin_ISBN_search(book_head);
-         admin_delete_book(book_head);
+         admin_delete_book(&book_head);
          book_head = sort_book(book_head);
          save_book(book_head);
          break;
@@ -1702,7 +1700,9 @@ void delete_menu(BOOK *book_head){
          printf("잘못된 번호입니다. 이전 메뉴로 돌아갑니다.");
          sleep(2);
          system("clear");
-         return;
+         break;
    }
+
+   return book_head;
 }
 
