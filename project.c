@@ -65,7 +65,7 @@ CLIENT *create_client(char id[], char password[], char name[], char address[], c
 
 void add_client(CLIENT *new_client, CLIENT **head); //새로운 구조체를 링크드 리스트에 연결해주는 함수
 
-CLIENT *sort_client(CLIENT *head); //client 링크드 리스트를 학번순으로 정렬
+void sort_client(CLIENT **head_p); //client 링크드 리스트를 학번순으로 정렬
 
 void print_all_client(CLIENT *head); //client 링크드 리스트의 내용을 전부 출력
 
@@ -99,7 +99,7 @@ BOOK *create_book(unsigned number, char name[], char publisher[], char writer[],
 
 void add_book(BOOK *new_book, BOOK **head_p);
 
-BOOK *sort_book(BOOK *head);
+BOOK *sort_book(BOOK **head_p);
 
 void save_book(BOOK *head);
 
@@ -141,7 +141,7 @@ void admin_delete_book(BOOK **head_p);
 
 void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head);
 
-void admin_book_return(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head);
+void admin_book_return(CLIENT *client_head, BOOK *book_head, BORROW **borrow_head_p);
 
 void admin_bookname_search(BOOK *head, const char msg[]);
 
@@ -149,7 +149,7 @@ void admin_ISBN_search(BOOK *head, const char msg[]);
 
 void admin_bookborrow(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head);
 
-void return_book(BOOK *book_head, BORROW *borrow_head, unsigned return_book_number);
+void return_book(BOOK *book_head, BORROW **borrow_head_p, unsigned return_book_number);
 
 ////////////////////////////////관리자 관련 함수 선언
 
@@ -159,7 +159,7 @@ void add_borrow(BORROW *new_borrow, BORROW **head_p);
 
 BORROW *create_borrow(char *client_id, unsigned number, time_t borrow_date, time_t return_date);
 
-BORROW *sort_borrow(BORROW *head);
+void sort_borrow(BORROW **head_p);
 
 void remove_borrow(BORROW **head_p, int position);
 
@@ -175,11 +175,11 @@ void main_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head);
 
 void client_menu_print(void);
 
-void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head);
+void client_menu(CLIENT **client_head_p, BOOK *book_head, BORROW *borrow_head);
 
 void admin_menu_print(void);
 
-void admin_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head);
+void admin_menu(CLIENT *client_head, BOOK **book_head_p, BORROW **borrow_head_p);
 
 void search_menu_print(void);
 
@@ -193,7 +193,7 @@ void booklend_menu_print(void);
 
 void delete_menu_print(void);
 
-BOOK *delete_menu(BOOK *book_head);
+void delete_menu(BOOK **book_head_p);
 
 /////////////////////////////////메뉴 함수 선언
 
@@ -252,7 +252,7 @@ CLIENT *client_read(void) { //함수 안에서 client 파일 내용 받아와서
 	}
 	fclose(client_ifp);
 
-	head = sort_client(head);
+	sort_client(&head);
 
 	return head;
 }
@@ -300,8 +300,8 @@ CLIENT *create_client(char id[], char password[], char name[], char address[], c
    return new_client;
 }
 
-CLIENT *sort_client(CLIENT *head){
-   CLIENT *temp = head;
+void sort_client(CLIENT **head_p){
+   CLIENT *temp = *head_p;
 
    int i, j, cnt = 0;
 
@@ -312,7 +312,7 @@ CLIENT *sort_client(CLIENT *head){
 
    CLIENT **sort = (CLIENT **) malloc(sizeof(CLIENT *) * cnt);
 
-   for (i = 0, temp = head; i < cnt; temp = temp -> next)
+   for (i = 0, temp = *head_p; i < cnt; temp = temp -> next)
       sort[i++] = temp;
 
    for (i = 0; i < cnt - 1; i++){
@@ -322,15 +322,15 @@ CLIENT *sort_client(CLIENT *head){
       }
    }
 
-   head = sort[0];
+   *head_p = sort[0];
 
-   for (i = 1, temp = head; i < cnt && temp; temp = temp -> next)
+   for (i = 1, temp = *head_p; i < cnt && temp; temp = temp -> next)
       temp -> next = sort[i++];
    temp -> next = NULL;
 
    free(sort);
 
-   return head;
+   // return head;
 }
 
 void print_all_client(CLIENT *head){
@@ -365,7 +365,7 @@ void signup_client(CLIENT *head){
    char id[10]; //학번 (정수 8자리)
    char password[20]; //비밀번호
    char name[25]; //이름
-   char address[100]; //주소
+   char address[100] = {0}; //주소
    char phone_number[20]; //전화번호
 
    printf("\n>> 회원 가입 <<\n");
@@ -393,6 +393,9 @@ void signup_client(CLIENT *head){
    printf("전화번호 : ");
    scanf("%s", phone_number); //전화번호 입력받기
    CLEAR_BUFFER;
+
+   address[strlen(address)] = ' ';
+   address[strlen(address) + 1] = '\0'; //널문자 넣어주기
 
    add_client(create_client(id, password, name, address, phone_number), &head);
    printf("\n>> 회원가입이 되셨습니다. <<\n");
@@ -517,7 +520,7 @@ void remove_client(CLIENT **head_p){
 void edit_client(CLIENT *head){
 
    char password[20]; //비밀번호
-   char address[100]; //주소
+   char address[100] = {0}; //주소
    char phone_number[20]; //전화번호
 
    printf("\n>> 개인정보 수정 <<\n");
@@ -533,16 +536,12 @@ void edit_client(CLIENT *head){
    CLEAR_BUFFER;
 
 
-   // address[strlen(address)] = ' '; //주소 마지막칸 띄어쓰기 해주기
-   // address[strlen(address) + 1] = '\0'; //널문자 넣어주기
+   address[strlen(address)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+   address[strlen(address) + 1] = '\0'; //널문자 넣어주기
 
    for (int i = 0; i < my_account; i++)
       head = head -> next;
-
-   // free(head -> password);
-   // free(head -> address);
-   // free(head -> phone_number);
-
+      
    REALLOC_CHAR(head, password); //head -> password에 메모리 할당
    REALLOC_CHAR(head, address); //head -> address에 메모리 할당
    REALLOC_CHAR(head, phone_number); //head -> phone_number에 메모리 할당
@@ -586,7 +585,7 @@ BOOK *book_read(void) { //함수 안에서 book 파일 내용 받아와서 BOOK 
    }
    fclose(book_ifp);
 
-   head = sort_book(head);
+   sort_book(&head);
 
    return head;
 }
@@ -629,8 +628,8 @@ BOOK *create_book(unsigned number, char name[], char publisher[], char writer[],
 		return new_book;
 }
 
-BOOK *sort_book(BOOK *head){
-   BOOK *temp = head;
+BOOK *sort_book(BOOK **head_p){
+   BOOK *temp = *head_p;
 
    int i, j, cnt = 0;
 
@@ -641,7 +640,7 @@ BOOK *sort_book(BOOK *head){
 
    BOOK **sort = (BOOK **) malloc(sizeof(BOOK *) * cnt);
 
-   for (i = 0, temp = head; i < cnt; temp = temp -> next)
+   for (i = 0, temp = *head_p; i < cnt; temp = temp -> next)
       sort[i++] = temp;
 
    for (i = 0; i < cnt - 1; i++){
@@ -658,15 +657,13 @@ BOOK *sort_book(BOOK *head){
       }
    }
 
-   head = sort[0];
+   *head_p = sort[0];
 
-   for (i = 1, temp = head; i < cnt && temp; temp = temp -> next)
+   for (i = 1, temp = *head_p; i < cnt && temp; temp = temp -> next)
       temp -> next = sort[i++];
    temp -> next = NULL;
 
    free(sort);
-
-   return head;
 }
 
 void save_book(BOOK *head){
@@ -799,7 +796,7 @@ BORROW *borrow_read(void) { //함수 안에서 borrow 파일 내용 받아와서
    }
    fclose(borrow_ifp);
 
-   head = sort_borrow(head);
+   sort_borrow(&head);
 
    return head;
 }
@@ -841,8 +838,8 @@ BORROW *create_borrow(char client_id[], unsigned book_number, time_t borrow_date
 	return new_borrow;
 }
 
-BORROW *sort_borrow(BORROW *head){
-	BORROW *temp = head;
+void sort_borrow(BORROW **head_p){
+	BORROW *temp = *head_p;
 
 	int i, j, cnt = 0;
 
@@ -853,7 +850,7 @@ BORROW *sort_borrow(BORROW *head){
 
 	BORROW **sort = (BORROW **) malloc(sizeof(BORROW *) * cnt);
 
-	for (i = 0, temp = head; i < cnt; temp = temp -> next)
+	for (i = 0, temp = *head_p; i < cnt; temp = temp -> next)
 		sort[i++] = temp;
 
 	for (i = 0; i < cnt - 1; i++){
@@ -863,15 +860,13 @@ BORROW *sort_borrow(BORROW *head){
 		}
    }
 
-	head = sort[0];
+	*head_p = sort[0];
 
-	for (i = 1, temp = head; i < cnt && temp; temp = temp -> next)
+	for (i = 1, temp = *head_p; i < cnt && temp; temp = temp -> next)
 		temp -> next = sort[i++];
 	temp -> next = NULL;
 
 	free(sort);
-
-	return head;
 }
 
 void save_borrow(BORROW *head){
@@ -888,10 +883,11 @@ void remove_borrow(BORROW **head_p, int position){
    BORROW *previous = *head_p, *after = *head_p, *temp = *head_p;
 
    if (position == 0){
-      temp = ((*head_p) -> next);
+      temp = (*head_p) -> next;
 
-      // free((*head_p) -> client_id);
-      // free((*head_p));
+      free((*head_p) -> client_id);
+      free(*head_p);
+
       *head_p = temp;
    }
    else {
@@ -912,14 +908,13 @@ void remove_borrow(BORROW **head_p, int position){
    }
 }
 
-
 void admin_insert_book(BOOK *head){
    unsigned number;
-   char name[70]; //도서명
-   char publisher[40]; //출판사
+   char name[70] = {0}; //도서명
+   char publisher[40] = {0}; //출판사
    char ISBN[20]; //ISBN(정수 13자리)
-   char writer[40]; //저자명
-   char location[40]; //소장처
+   char writer[40] = {0}; //저자명
+   char location[40] = {0}; //소장처
    char borrow;
    char buf;
 
@@ -938,6 +933,19 @@ void admin_insert_book(BOOK *head){
    CLEAR_BUFFER;
    printf("소장처 : ");
    gets(location);
+
+   printf("%s %s %s %s\n", name, publisher, writer, location);
+
+   name[strlen(name)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+   name[strlen(name) + 1] = '\0'; //널문자 넣어주기
+   publisher[strlen(publisher)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+   publisher[strlen(publisher) + 1] = '\0'; //널문자 넣어주기
+   writer[strlen(writer)] = ' '; //주소 마지막칸 띄어쓰기 해주기
+   writer[strlen(writer) + 1] = '\0'; //널문자 넣어주기
+   location[strlen(location)] = ' ';
+   location[strlen(location) + 1] = '\0';
+
+   printf("%s %s %s %s\n", name, publisher, writer, location);
 
    printf("\n자동입력 사항\n");
    printf("대여가능 여부 : %c\n", borrow);
@@ -1053,7 +1061,6 @@ void admin_ISBN_search(BOOK *head, const char msg[]){
    }
 }
 
-
 void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head){
    int num;
    booklend_menu_print();
@@ -1063,14 +1070,14 @@ void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head){
       case 1:
          admin_bookname_search(book_head, "대여");
          admin_bookborrow(book_head, client_head, borrow_head);
-         borrow_head = sort_borrow(borrow_head);
+         // sort_borrow(&borrow_head);
          save_borrow(borrow_head);
          break;
          //도서명 검색 -> 대여 -> borrow파일에 수정내용 입력
       case 2:
          admin_ISBN_search(book_head, "대여");
          admin_bookborrow(book_head, client_head, borrow_head);
-         borrow_head = sort_borrow(borrow_head);
+         // sort_borrow(&borrow_head);
          save_borrow(borrow_head);
          //ISBN 검색 -> 대여 -> borrow파일에 수정내용 입력
          break;
@@ -1082,10 +1089,10 @@ void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head){
    }
 }
 
-void admin_book_return(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
+void admin_book_return(CLIENT *client_head, BOOK *book_head, BORROW **borrow_head_p){
    CLIENT *client_temp = client_head;
    BOOK *book_temp = book_head;
-   BORROW *borrow_temp = borrow_head;
+   BORROW *borrow_temp = *borrow_head_p;
 
    char id[10];
    unsigned return_book_number;
@@ -1099,15 +1106,15 @@ void admin_book_return(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head
       return;
    }
 
-   my_borrow_list(client_head, book_head, borrow_head, "회원의");
+   my_borrow_list(client_head, book_head, *borrow_head_p, "회원의");
 
    printf("반납할 도서번호를 입력하세요: ");
    scanf("%u", &return_book_number);
    CLEAR_BUFFER;
    while(borrow_temp){
       if(borrow_temp -> book_number == return_book_number){
-         return_book(book_head, borrow_head, return_book_number);
-         save_borrow(borrow_head);
+         return_book(book_head, borrow_head_p, return_book_number);
+         save_borrow(*borrow_head_p);
       }
       borrow_temp = borrow_temp -> next;
    }
@@ -1253,9 +1260,9 @@ void admin_bookborrow(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head)
    }
 }
 
-void return_book(BOOK *book_head, BORROW *borrow_head, unsigned return_book_number){
+void return_book(BOOK *book_head, BORROW **borrow_head_p, unsigned return_book_number){
    BOOK *book_temp = book_head;
-   BORROW *borrow_temp = borrow_head;
+   BORROW *borrow_temp = *borrow_head_p;
 
    char answer;
    int book_position, borrow_position, i;
@@ -1266,14 +1273,14 @@ void return_book(BOOK *book_head, BORROW *borrow_head, unsigned return_book_numb
       CLEAR_BUFFER;
       if (answer == 'Y' || answer == 'y'){
          book_position = checknum_book(book_head, return_book_number);
-         borrow_position = checknum_borrow(borrow_head, return_book_number);
+         borrow_position = checknum_borrow(*borrow_head_p, return_book_number);
 
          for (i = 0; i < book_position; i++)
             book_temp = book_temp -> next;   
 
          book_temp -> borrow = 'Y';
 
-         remove_borrow(&borrow_head, borrow_position);
+         remove_borrow(borrow_head_p, borrow_position);
 
          printf("\n도서가 반납 되었습니다.");
          return;
@@ -1286,6 +1293,7 @@ void return_book(BOOK *book_head, BORROW *borrow_head, unsigned return_book_numb
          printf("\n다시 입력해주세요.");
       }
    }
+
 }
 
 int count_available_book(BOOK *book_head, char *factor){
@@ -1480,16 +1488,16 @@ void main_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ // �
       switch(num){
          case 1:
             signup_client(client_head);
-            client_head = sort_client(client_head);
+            sort_client(&client_head);
             save_client(client_head);
             //회원가입
             break;
          case 2:
             login_client(client_head);
             if (my_account)
-               client_menu(client_head, book_head, borrow_head);
+               client_menu(&client_head, book_head, borrow_head);
             else
-               admin_menu(client_head, book_head, borrow_head);
+               admin_menu(client_head, &book_head, &borrow_head);
             //로그인
             break;
          case 3:
@@ -1512,7 +1520,7 @@ void client_menu_print(void){ //회원 메뉴 프린트 함수
    printf("\n번호를 선택하세요 : ");
 }
 
-void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ //회원 메뉴 전체
+void client_menu(CLIENT **client_head_p, BOOK *book_head, BORROW *borrow_head){ //회원 메뉴 전체
    int num;
    while(1){
       client_menu_print();
@@ -1524,17 +1532,17 @@ void client_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ //�
             //도서검색
             break;
          case 2:
-            my_borrow_list(client_head, book_head, borrow_head, "내");
+            my_borrow_list(*client_head_p, book_head, borrow_head, "내");
             //내 대여 목록
             break;
          case 3:
-            edit_client(client_head);
-            save_client(client_head);
+            edit_client(*client_head_p);
+            save_client(*client_head_p);
             //개인정보 수정
             break;
          case 4:
-            remove_client(&client_head);
-            save_client(client_head);
+            remove_client(client_head_p);
+            save_client(*client_head_p);
             //회원 탈퇴
             return;
          case 5:
@@ -1609,7 +1617,7 @@ void admin_menu_print(void){
    printf("\n번호를 선택하세요 : ");
 }
 
-void admin_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
+void admin_menu(CLIENT *client_head, BOOK **book_head_p, BORROW **borrow_head_p){
    int num;
    while(1){
       admin_menu_print();
@@ -1618,26 +1626,26 @@ void admin_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){
 
       switch(num){
          case 1 :
-            admin_insert_book(book_head);
-            book_head = sort_book(book_head);
-            save_book(book_head);
+            admin_insert_book(*book_head_p);
+            sort_book(book_head_p);
+            save_book(*book_head_p);
             //도서 등록
             break;
          case 2 :
-            book_head = delete_menu(book_head);
+            delete_menu(book_head_p);
             //도서 삭제
             break;
          case 3 :
-            admin_book_lend(book_head, client_head, borrow_head);
+            admin_book_lend(*book_head_p, client_head, *borrow_head_p);
             //도서 대여
             break;
          case 4 :
-            admin_book_return(client_head, book_head, borrow_head);
-            save_book(book_head);
+            admin_book_return(client_head, *book_head_p, borrow_head_p);
+            save_book(*book_head_p);
             //도서 반납
             break;
          case 5 :
-            booksearch_menu(book_head);
+            booksearch_menu(*book_head_p);
             //도서 검색
             break;
          case 6 :
@@ -1721,7 +1729,7 @@ void delete_menu_print(void){
    printf("\n검색 번호를 입력하세요 : ");
 }
 
-BOOK *delete_menu(BOOK *book_head){
+void delete_menu(BOOK **book_head_p){
    int num;
 
    delete_menu_print();
@@ -1730,16 +1738,16 @@ BOOK *delete_menu(BOOK *book_head){
 
    switch(num){
       case 1 :
-         admin_bookname_search(book_head, "삭제");
-         admin_delete_book(&book_head);
-         book_head = sort_book(book_head);
-         save_book(book_head);
+         admin_bookname_search(*book_head_p, "삭제");
+         admin_delete_book(book_head_p);
+         sort_book(book_head_p);
+         save_book(*book_head_p);
          break;
       case 2 :
-         admin_ISBN_search(book_head, "삭제");
-         admin_delete_book(&book_head);
-         book_head = sort_book(book_head);
-         save_book(book_head);
+         admin_ISBN_search(*book_head_p, "삭제");
+         admin_delete_book(book_head_p);
+         sort_book(book_head_p);
+         save_book(*book_head_p);
          break;
       default :
          printf("잘못된 번호입니다. 이전 메뉴로 돌아갑니다.");
@@ -1747,6 +1755,4 @@ BOOK *delete_menu(BOOK *book_head){
          system("clear");
          break;
    }
-
-   return book_head;
 }
