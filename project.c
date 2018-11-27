@@ -204,6 +204,10 @@ int main(void) {
    BOOK *book_head = book_read();
    BORROW *borrow_head = borrow_read();
 
+   save_client(client_head);
+   save_book(book_head);
+   save_borrow(borrow_head);
+
    // login_client(client_head);
    // admin_bookborrow(book_head, client_head, borrow_head);
    // my_borrow_list(client_head, book_head, borrow_head, "내"); //방금 대여한 책이 txt에 입력이 되는데 연결리스트로 안들어감
@@ -215,8 +219,7 @@ int main(void) {
    // total_search(book_head);
 
    // while(borrow_head){
-   main_menu(client_head, book_head, borrow_head);
-      
+   main_menu(client_head, book_head, borrow_head); 
    
 
    return 0;
@@ -934,8 +937,6 @@ void admin_insert_book(BOOK *head){
    printf("소장처 : ");
    gets(location);
 
-   printf("%s %s %s %s\n", name, publisher, writer, location);
-
    name[strlen(name)] = ' '; //주소 마지막칸 띄어쓰기 해주기
    name[strlen(name) + 1] = '\0'; //널문자 넣어주기
    publisher[strlen(publisher)] = ' '; //주소 마지막칸 띄어쓰기 해주기
@@ -1083,7 +1084,7 @@ void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head){
          break;
       default :
          printf("잘못된 번호입니다. 이전 메뉴로 돌아갑니다.");
-         sleep(2);
+         sleep(1);
          system("clear");
          break;
    }
@@ -1505,7 +1506,7 @@ void main_menu(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head){ // �
             //프로그램 종료
          default :
             printf("잘못된 번호입니다. 다시 입력하세요");
-            sleep(2);
+            sleep(1);
             system("clear");
             break;
       }
@@ -1554,7 +1555,7 @@ void client_menu(CLIENT **client_head_p, BOOK *book_head, BORROW *borrow_head){ 
             //프로그램 종료
          default :
             printf("잘못된 번호입니다. 다시 입력하세요");
-            sleep(2);
+            sleep(1);
             system("clear");
             break;
       }
@@ -1601,7 +1602,7 @@ void booksearch_menu(BOOK *book_head){
             //프로그램 종료
          default :
             printf("잘못된 번호입니다. 다시 입력하세요");
-            sleep(2);
+            sleep(1);
             system("clear");
             break;
       }
@@ -1661,7 +1662,7 @@ void admin_menu(CLIENT *client_head, BOOK **book_head_p, BORROW **borrow_head_p)
             //프로그램 종료
           default :
             printf("잘못된 번호입니다. 다시 입력하세요");
-            sleep(2);
+            sleep(1);
             system("clear");
             break;
       }
@@ -1710,7 +1711,7 @@ void search_menu(CLIENT *client_head){
             //이전 메뉴
          default :
             printf("잘못된 번호입니다. 다시 입력하세요");
-            sleep(2);
+            sleep(1);
             system("clear");
             break;
       }
@@ -1751,7 +1752,7 @@ void delete_menu(BOOK **book_head_p){
          break;
       default :
          printf("잘못된 번호입니다. 이전 메뉴로 돌아갑니다.");
-         sleep(2);
+         sleep(1);
          system("clear");
          break;
    }
