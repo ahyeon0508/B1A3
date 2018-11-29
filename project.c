@@ -102,6 +102,8 @@ void save_book(BOOK *head);
 
 void remove_book(BOOK **head_p, int location);
 
+int is_ISBN_int(char ISBN[]);
+
 int book_number_check(BOOK *head);
 
 int count_available_book(BOOK *book_head, char *factor);
@@ -730,6 +732,18 @@ void remove_book(BOOK **head_p, int position){
    }
 }
 
+int is_ISBN_int(char ISBN[]){
+      if (strlen(ISBN) != 13){
+      return 0;
+   }
+   
+   for (int i = 0; i < 13; i++)
+      if (ISBN[i] > '9' || ISBN[i] < '0')
+         return 0;
+   
+   return 1;
+}
+
 int book_number_check(BOOK *head){
    int res = 0;
    char ISBN[20];
@@ -950,6 +964,14 @@ void admin_insert_book(BOOK *head){
    printf("ISBN : ");
    scanf("%s", ISBN);
    CLEAR_BUFFER;
+
+   while (is_ISBN_int(ISBN) == 0){
+      printf("ISBN은 정수 13자리이어야 합니다.\n");
+      printf("다시 입력해주세요.\n");
+      printf("ISBN : ");
+      scanf("%s", ISBN);
+      CLEAR_BUFFER;
+   }
    printf("소장처 : ");
    gets(location);
 
@@ -962,11 +984,9 @@ void admin_insert_book(BOOK *head){
    location[strlen(location)] = ' ';
    location[strlen(location) + 1] = '\0';
 
-   printf("%s %s %s %s\n", name, publisher, writer, location);
-
    printf("\n자동입력 사항\n");
    printf("대여가능 여부 : %c\n", borrow);
-   printf("도서번호 : %u\n", number);
+   printf("도서번호 : %07u\n", number);
 
    printf("등록하려면 Y를 입력해주세요 : ");
 
