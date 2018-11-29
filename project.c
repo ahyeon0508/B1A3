@@ -11,18 +11,13 @@
 
 /////////////////////////////////동적 메모리 할당 관련 매크로
 
-#define SWAP_CHAR(x, y) {char temp; temp = x; x = y; y = temp;}
-#define SWAP_INT(x, y) {int temp; temp = x; x = y; y = temp;}
-#define SWAP_UNSIGNED(x, y) {unsigned temp; temp = x; x = y; y = temp;}
-#define SWAP_UNSIGNED_LONG(x, y) {unsigned long temp; temp = x; x = y; y = temp;}
-#define SWAP_STRING(x, y) {char temp[100]; strcpy(temp, x); strcpy(x, y); strcpy(y, temp);}
 #define SWAP_CLIENT(x, y) {CLIENT *temp; temp = x; x = y; y = temp;}
 #define SWAP_BOOK(x, y) {BOOK *temp; temp = x; x = y; y = temp;}
 #define SWAP_BORROW(x, y) {BORROW *temp; temp = x; x = y; y = temp;}
 
 /////////////////////////////////SWAP 관련 매크로
 
-#define CLEAR_BUFFER while(getchar() != '\n')
+#define CLEAR_BUFFER while (getchar() != '\n')
 #define true 1
 #define false 0
 
@@ -74,6 +69,8 @@ void print_one_client(CLIENT *head, int location); //client 링크드 리스트�
 void save_client(CLIENT *head); //client 파일에 메모리에 있는 client 링크드 리스트를 저장
 
 void signup_client(CLIENT *head); //회원가입용 함수
+
+int is_id_int(char id[]); //학번이 8자리의 정수인지 확인해서 맞으면 1, 아니면 0을 리턴하는 함수
 
 int checkname_client(CLIENT *head, char name[]); //client 파일 같은 이름이 몇번째에 있는지 리턴
 
@@ -365,7 +362,7 @@ void save_client(CLIENT *head){
 }
 
 void signup_client(CLIENT *head){
-   char id[10]; //학번 (정수 8자리)
+   char id[10] = {0}; //학번 (정수 8자리)
    char password[20]; //비밀번호
    char name[25]; //이름
    char address[100] = {0}; //주소
@@ -377,6 +374,13 @@ void signup_client(CLIENT *head){
    scanf("%s", id); //학번 입력받기
    CLEAR_BUFFER;
 
+   while (is_id_int(id) == 0){
+      printf("학번은 정수 8자리이어야 합니다.\n");
+      printf("다시 입력해주세요.\n");
+      printf("학번 : ");
+      scanf("%s", id);
+      CLEAR_BUFFER;
+   }
 
    while (checkid_client(head, id) != -1){ //학번 중복 체크 하는 부분
       printf("이미 있는 학번입니다. 다시 입력해주세요.\n");
@@ -402,6 +406,18 @@ void signup_client(CLIENT *head){
 
    add_client(create_client(id, password, name, address, phone_number), &head);
    printf("\n>> 회원가입이 되셨습니다. <<\n");
+}
+
+int is_id_int(char id[]){
+   if (strlen(id) != 8){
+      return 0;
+   }
+   
+   for (int i = 0; i < 8; i++)
+      if (id[i] > '9' || id[i] < '0')
+         return 0;
+   
+   return 1;
 }
 
 int checkname_client(CLIENT *head, char name[]){
