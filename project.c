@@ -78,13 +78,15 @@ int checkid_client(CLIENT *head, char id[]);
 //  client 파일에 매개 인자로 받은 학번과 중복 학번이 없으면 -1을 리턴, 있으면
 //  head에서 몇번 움직여야 중복인게 나오는지 숫자를 리턴하는 함수
 
+_Bool checkid_borrow(BORROW *head, char id[]);
+
 int checkpw_client(CLIENT *head, char password[]); //id 말고 password 리턴하는 함수
 
 void login_client(CLIENT *head); //로그인 한 뒤 head에서 몇번 움직여야 내 정보로 갈 수 있는지 my_account에 저장하는 함수
 
 void edit_client(CLIENT *head); //내 회원 정보를 수정하는 함수
 
-void remove_client(CLIENT **head_p); //회원 탈퇴 함수
+void remove_client(CLIENT **head_p, BORROW *borrow_head); //회원 탈퇴 함수
 
 void logout_client(void); //로그아웃 함수
 
@@ -450,6 +452,18 @@ int checkid_client(CLIENT *head, char id[]){
    return res;
 }
 
+_Bool checkid_borrow(BORROW *head, char id[]){
+   _Bool res = false;
+
+   while (head){
+      if (!strcmp(head -> client_id, id))
+         res = true;
+      head = head -> next;
+   }
+
+   return res;
+}
+
 int checkpw_client(CLIENT *head, char password[]){
    int res = -1;
    int cnt = 0;
@@ -500,8 +514,18 @@ void logout_client(void){
    my_account = 0;
 }
 
-void remove_client(CLIENT **head_p){
+void remove_client(CLIENT **head_p, BORROW *borrow_head){
    CLIENT *previous = *head_p, *after = *head_p, *temp = *head_p;
+
+   for (int i = 0; i < my_account; i++)
+      temp = temp -> next;
+
+   if (checkid_borrow(borrow_head, temp -> id)){
+      printf("\n반납하지 않은 도서가 있어서 탈퇴할 수 없습니다.\n");
+      return;
+   }
+
+   temp = *head_p;
 
    if (my_account == 0){
       temp = (*head_p) -> next;
@@ -1487,7 +1511,7 @@ void my_borrow_list(CLIENT *client_head, BOOK *book_head, BORROW *borrow_head, c
    for (i = 0; i < my_account; i++)
       client_temp = client_temp -> next; 
    
-   printf(">> %s 대여 목록 <<\n", msg);
+   printf("\n>> %s 대여 목록 <<\n", msg);
 
    while (borrow_temp){
       book_temp = book_head; //초기화
@@ -1578,7 +1602,7 @@ void client_menu(CLIENT **client_head_p, BOOK *book_head, BORROW *borrow_head){ 
             //개인정보 수정
             break;
          case 4:
-            remove_client(client_head_p);
+            remove_client(client_head_p, borrow_head);
             save_client(*client_head_p);
             //회원 탈퇴
             return;
