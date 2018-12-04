@@ -517,16 +517,6 @@ void logout_client(void){
 void remove_client(CLIENT **head_p, BORROW *borrow_head){
    CLIENT *previous = *head_p, *after = *head_p, *temp = *head_p;
 
-   for (int i = 0; i < my_account; i++)
-      temp = temp -> next;
-
-   if (checkid_borrow(borrow_head, temp -> id)){
-      printf("\n반납하지 않은 도서가 있어서 탈퇴할 수 없습니다.\n");
-      return;
-   }
-
-   temp = *head_p;
-
    if (my_account == 0){
       temp = (*head_p) -> next;
       free((*head_p) -> id);
@@ -1583,7 +1573,9 @@ void client_menu_print(void){ //회원 메뉴 프린트 함수
 
 void client_menu(CLIENT **client_head_p, BOOK *book_head, BORROW *borrow_head){ //회원 메뉴 전체
    int num;
+   CLIENT *client_temp = *client_head_p;
    while(1){
+      client_temp = *client_head_p;
       client_menu_print();
       scanf("%d", &num);
       CLEAR_BUFFER;
@@ -1602,6 +1594,14 @@ void client_menu(CLIENT **client_head_p, BOOK *book_head, BORROW *borrow_head){ 
             //개인정보 수정
             break;
          case 4:
+            for (int i = 0; i < my_account; i++)
+               client_temp = client_temp -> next;
+
+            if (checkid_borrow(borrow_head, client_temp -> id)){
+               printf("\n반납하지 않은 도서가 있어서 탈퇴할 수 없습니다.\n");
+               break;
+            }
+
             remove_client(client_head_p, borrow_head);
             save_client(*client_head_p);
             //회원 탈퇴
