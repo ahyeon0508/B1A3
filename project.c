@@ -98,7 +98,7 @@ BOOK *create_book(unsigned number, char name[], char publisher[], char writer[],
 
 void add_book(BOOK *new_book, BOOK **head_p);
 
-BOOK *sort_book(BOOK **head_p);
+void *sort_book(BOOK **head_p);
 
 void save_book(BOOK *head);
 
@@ -159,8 +159,6 @@ BORROW *borrow_read(void);
 void add_borrow(BORROW *new_borrow, BORROW **head_p);
 
 BORROW *create_borrow(char *client_id, unsigned number, time_t borrow_date, time_t return_date);
-
-void sort_borrow(BORROW **head_p);
 
 void remove_borrow(BORROW **head_p, int position);
 
@@ -662,7 +660,7 @@ BOOK *create_book(unsigned number, char name[], char publisher[], char writer[],
 		return new_book;
 }
 
-BOOK *sort_book(BOOK **head_p){
+void *sort_book(BOOK **head_p){
    BOOK *temp = *head_p;
 
    int i, j, cnt = 0;
@@ -842,8 +840,6 @@ BORROW *borrow_read(void) { //함수 안에서 borrow 파일 내용 받아와서
    }
    fclose(borrow_ifp);
 
-   sort_borrow(&head);
-
    return head;
 }
 
@@ -882,37 +878,6 @@ BORROW *create_borrow(char client_id[], unsigned book_number, time_t borrow_date
 	new_borrow -> next = NULL;
 
 	return new_borrow;
-}
-
-void sort_borrow(BORROW **head_p){
-	BORROW *temp = *head_p;
-
-	int i, j, cnt = 0;
-
-	while(temp){
-		temp = temp -> next;
-		cnt++;
-	}
-
-	BORROW **sort = (BORROW **) malloc(sizeof(BORROW *) * cnt);
-
-	for (i = 0, temp = *head_p; i < cnt; temp = temp -> next)
-		sort[i++] = temp;
-
-	for (i = 0; i < cnt - 1; i++){
-		for (j = i + 1; j < cnt; j++){
-			if (atoll(sort[i] -> client_id) > atoll(sort[j] -> client_id))
-			SWAP_BORROW(sort[i], sort[j]);
-		}
-   }
-
-	*head_p = sort[0];
-
-	for (i = 1, temp = *head_p; i < cnt && temp; temp = temp -> next)
-		temp -> next = sort[i++];
-	temp -> next = NULL;
-
-	free(sort);
 }
 
 void save_borrow(BORROW *head){
@@ -1120,14 +1085,12 @@ void admin_book_lend(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head){
       case 1:
          admin_bookname_search(book_head, "대여");
          admin_bookborrow(book_head, client_head, borrow_head);
-         // sort_borrow(&borrow_head);
          save_borrow(borrow_head);
          break;
          //도서명 검색 -> 대여 -> borrow파일에 수정내용 입력
       case 2:
          admin_ISBN_search(book_head, "대여");
          admin_bookborrow(book_head, client_head, borrow_head);
-         // sort_borrow(&borrow_head);
          save_borrow(borrow_head);
          //ISBN 검색 -> 대여 -> borrow파일에 수정내용 입력
          break;
