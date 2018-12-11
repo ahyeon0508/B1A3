@@ -207,17 +207,6 @@ int main(void) {
    save_book(book_head);
    save_borrow(borrow_head);
 
-   // login_client(client_head);
-   // admin_bookborrow(book_head, client_head, borrow_head);
-   // my_borrow_list(client_head, book_head, borrow_head, "내"); //방금 대여한 책이 txt에 입력이 되는데 연결리스트로 안들어감
-   // save_borrow(borrow_head);
-   // total_search(book_head);
-
-   // admin_bookname_search(book_head);
-   // admin_delete_book(book_head);
-   // total_search(book_head);
-
-   // while(borrow_head){
    main_menu(client_head, book_head, borrow_head);
 
 
@@ -332,7 +321,6 @@ void sort_client(CLIENT **head_p){
 
    free(sort);
 
-   // return head;
 }
 
 void print_all_client(CLIENT *head){
@@ -556,7 +544,6 @@ void edit_client(CLIENT *head){
    char phone_number[20]; //전화번호
 
    printf("\n>> 개인정보 수정 <<\n");
-   //print_one_client(head, my_account);
    printf("\n수정할 정보를 입력해주세요\n");
    printf("비밀번호 : ");
    scanf("%s", password);
@@ -1236,7 +1223,6 @@ void admin_bookborrow(BOOK *book_head, CLIENT *client_head, BORROW *borrow_head)
       CLEAR_BUFFER;
 
       position = checknum_book(book_head, get_number);
-      // printf("\n%d\n", position);
 
       for (i = 0; i < position; i++)
          book_temp = book_temp -> next;
